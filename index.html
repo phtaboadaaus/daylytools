@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#121212">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Tools</title>
+
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <nav>
+    <div class="nav-wrapper teal">
+      <a href="#!" class="brand-logo center" onclick="goToStartModule()">Daily Tools</a>
+      <a href="#" data-target="slide-out" class="sidenav-trigger show-on-large"><i class="material-icons">menu</i></a>
+    </div>
+  </nav>
+
+  <ul id="slide-out" class="sidenav">
+    <li><a href="#" onclick="showModule('pomodoro')" data-key="pomodoro" data-i18n="nav_pomodoro"><i class="material-icons">timer</i> Pomodoro</a></li>
+    <li><a href="#" onclick="showModule('timer')" data-key="timer" data-i18n="nav_timer"><i class="material-icons">alarm</i> Temporizador</a></li>
+    <li><a href="#" onclick="showModule('counter')" data-key="counter" data-i18n="nav_counter"><i class="material-icons">plus_one</i> Contadores</a></li>
+    <li><a href="#" onclick="showModule('checklist')" data-key="checklist" data-i18n="nav_checklist"><i class="material-icons">check_box</i> Checklist</a></li>
+    <li><a href="#" onclick="showModule('notes')" data-key="notes" data-i18n="nav_notes"><i class="material-icons">note</i> Notas</a></li>
+    <li><a href="#" onclick="showModule('calculator')" data-key="calculator" data-i18n="nav_calculator"><i class="material-icons">calculate</i> Calculadora</a></li>
+    <li><a href="#" onclick="showModule('reminders')" data-key="reminders" data-i18n="nav_reminders"><i class="material-icons">notifications</i> Recordatorios</a></li>
+    <li><a href="#" onclick="showModule('settings')" data-key="settings" data-i18n="nav_settings"><i class="material-icons">settings</i> Configuración</a></li>
+  </ul>
+
+  <main class="container">
+
+<section id="pomodoro-module" class="module">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e0f2f1; padding-bottom: 10px; margin-bottom: 15px;">
+        <h4 style="margin: 0; border: none; padding: 0;" data-i18n="pomo_title">Pomodoro</h4>
+        <button class="btn-flat waves-effect modal-trigger" data-target="modal-pomodoro-settings" style="padding: 0;">
+            <i class="material-icons teal-text">settings</i>
+        </button>
+    </div>
+    
+    <div id="pomodoro-display" class="timer-display">25:00</div>
+
+    <div class="pomodoro-buttons">
+        <button id="pomodoro-start" class="btn waves-effect waves-light green">
+            <i class="material-icons left">play_arrow</i><span data-i18n="btn_start">INICIAR</span>
+        </button>
+        <button id="pomodoro-stop" class="btn waves-effect waves-light red">
+            <i class="material-icons left">pause</i><span data-i18n="btn_stop">DETENER</span>
+        </button>
+        <button id="pomodoro-reset" class="btn waves-effect waves-light grey">
+            <i class="material-icons left">replay</i><span data-i18n="btn_reset">RESET</span>
+        </button>
+    </div>
+
+    <div style="background: #f1f8f7; padding: 10px 20px; border-radius: 30px; display: inline-block; margin-top: 10px; border: 1px solid #e0f2f1;">
+        <p style="margin: 0; font-size: 0.9rem; font-weight: 500; color: #555;">
+            <span data-i18n="pomodoro_sessions_label">SESIONES COMPLETADAS:</span> 
+            <b id="pomodoro-sessions" class="teal-text" style="font-size: 1.2rem; margin-left: 5px;">0</b>
+        </p>
+    </div>
+</section>
+
+<div id="modal-pomodoro-settings" class="modal">
+    <div class="modal-content">
+        <h5 class="teal-text center-align" style="font-weight: bold; margin-bottom: 20px;" data-i18n="settings_title">Configuración</h5>
+        
+        <div class="scroll-picker-container">
+            <div class="picker-col">
+                <label data-i18n="label_work">Trabajo</label>
+                <div class="picker-viewport" id="picker-pomo-work">
+                    <div class="picker-wheel">
+                        </div>
+                </div>
+            </div>
+
+            <div class="picker-separator">:</div>
+
+            <div class="picker-col">
+                <label data-i18n="label_break">Descanso</label>
+                <div class="picker-viewport" id="picker-pomo-break">
+                    <div class="picker-wheel">
+                        </div>
+                </div>
+            </div>
+
+            <div class="picker-separator">:</div>
+
+            <div class="picker-col">
+                <label data-i18n="label_cycles">Ciclos</label>
+                <div class="picker-viewport" id="picker-pomo-cycles">
+                    <div class="picker-wheel">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer" style="display: flex; justify-content: center; padding-bottom: 20px;">
+        <button class="modal-close btn teal waves-effect btn-compact" style="width: 80%; border-radius: 10px;" data-i18n="timer_btn_ready">
+            LISTO
+        </button>
+    </div>
+</div>
+
+    <section id="timer-module" class="module">
+      <h4 data-i18n="timer_title">Temporizador</h4>
+      <div id="timer-display" class="timer-display" style="cursor: pointer;" onclick="openTimerPicker()">00:00:00</div>
+      <p class="center-align grey-text" style="margin-top: -20px;" data-i18n="timer_set_time">Toca el tiempo para ajustar</p>
+
+      <div class="timer-presets center-align" style="margin-bottom: 20px;">
+        <button class="btn-small waves-effect waves-light teal lighten-4 black-text preset-btn" data-time="1">1m</button>
+        <button class="btn-small waves-effect waves-light teal lighten-4 black-text preset-btn" data-time="5">5m</button>
+        <button class="btn-small waves-effect waves-light teal lighten-4 black-text preset-btn" data-time="10">10m</button>
+        <button class="btn-small waves-effect waves-light teal lighten-4 black-text preset-btn" data-time="30">30m</button>
+      </div>
+      
+      <div class="timer-buttons">
+        <button id="timer-start" class="btn green" data-i18n="btn_start"><i class="material-icons left">play_arrow</i>Iniciar</button>
+        <button id="timer-stop" class="btn red" data-i18n="btn_stop"><i class="material-icons left">pause</i>Detener</button>
+        <button id="timer-reset" class="btn grey" data-i18n="btn_reset"><i class="material-icons left">restart_alt</i>Reset</button>
+      </div>
+
+      <div id="modal-picker" class="modal" style="max-width: 350px; border-radius: 20px;">
+        <div class="modal-content center-align">
+          <h5 style="color: #26a69a;" data-i18n="timer_set_time">Ajustar Tiempo</h5>
+          <div class="scroll-picker-container" style="background: transparent; box-shadow: none;">
+            <div class="picker-col">
+              <label>HH</label>
+              <div class="picker-viewport" id="picker-hours"><div class="picker-wheel"></div></div>
+            </div>
+            <span class="picker-separator">:</span>
+            <div class="picker-col">
+              <label>MM</label>
+              <div class="picker-viewport" id="picker-mins"><div class="picker-wheel"></div></div>
+            </div>
+            <span class="picker-separator">:</span>
+            <div class="picker-col">
+              <label>SS</label>
+              <div class="picker-viewport" id="picker-secs"><div class="picker-wheel"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="display: flex; justify-content: center; padding-bottom: 20px;">
+          <button id="btn-close-picker" class="btn teal waves-effect waves-light" style="width: 80%; border-radius: 10px;" data-i18n="timer_btn_ready">LISTO</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="counter-module" class="module">
+      <h4 data-i18n="nav_counter">Contadores</h4>
+      <div id="counters-list"></div>
+      <div class="input-field">
+        <input type="text" id="new-counter-name" data-i18n="placeholder_counter" placeholder="Nombre del contador">
+      </div>
+      <button class="btn teal" onclick="addCounter()" data-i18n="btn_add"><i class="material-icons left">add</i>Añadir</button>
+    </section>
+
+    <section id="checklist-module" class="module">
+      <h4 data-i18n="nav_checklist">Checklist</h4>
+      <div class="input-field">
+        <input type="text" id="new-task" data-i18n="placeholder_checklist" placeholder="Nueva tarea">
+      </div>
+      <button class="btn teal" onclick="addTask()" data-i18n="btn_add"><i class="material-icons left">add</i>Añadir</button>
+      <ul id="task-list" class="collection" style="margin-top: 20px; border: none;"></ul>
+    </section>
+
+    <section id="notes-module" class="module">
+      <h4 data-i18n="nav_notes">Notas rápidas</h4>
+      <textarea id="note-input" class="materialize-textarea" data-i18n="placeholder_notes" placeholder="Escribe tu nota aquí..."></textarea>
+      <button class="btn teal" onclick="saveNote()" data-i18n="btn_save"><i class="material-icons left">save</i>Guardar</button>
+      <div id="notes-list" style="margin-top: 20px;"></div>
+    </section>
+
+    <section id="calculator-module" class="module">
+      <h4 data-i18n="nav_calculator">Calculadora</h4>
+      <div class="calculator-container">
+        <input type="text" id="calc-display" readonly class="calc-display" value="0">
+        <div class="calc-buttons">
+          <button class="btn-num" onclick="calcPress('7')">7</button>
+          <button class="btn-num" onclick="calcPress('8')">8</button>
+          <button class="btn-num" onclick="calcPress('9')">9</button>
+          <button class="btn-op" onclick="calcPress('/')">÷</button>
+          <button class="btn-num" onclick="calcPress('4')">4</button>
+          <button class="btn-num" onclick="calcPress('5')">5</button>
+          <button class="btn-num" onclick="calcPress('6')">6</button>
+          <button class="btn-op" onclick="calcPress('*')">×</button>
+          <button class="btn-num" onclick="calcPress('1')">1</button>
+          <button class="btn-num" onclick="calcPress('2')">2</button>
+          <button class="btn-num" onclick="calcPress('3')">3</button>
+          <button class="btn-op" onclick="calcPress('-')">-</button>
+          <button class="btn-num" onclick="calcPress('0')">0</button>
+          <button class="btn-num" onclick="calcPress('.')">.</button>
+          <button class="btn-equal" onclick="calcPress('=')">=</button>
+          <button class="btn-op" onclick="calcPress('+')">+</button>
+          <button class="btn-clear" onclick="calcPress('C')" data-i18n="btn_clear_calc">BORRAR TODO</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="reminders-module" class="module">
+      <h4 data-i18n="reminders_title">Recordatorios</h4>
+      <div class="row">
+        <div class="input-field col s12">
+          <input type="text" id="reminder-text" data-i18n="placeholder_reminder" placeholder="¿Qué quieres recordar?">
+        </div>
+        <div class="input-field col s6">
+          <input type="text" id="reminder-time" class="timepicker" data-i18n="placeholder_time" placeholder="Hora">
+        </div>
+        <div class="input-field col s6">
+          <select id="reminder-repeat" class="browser-default">
+            <option value="once" data-i18n="freq_once">Una vez</option>
+            <option value="5min" data-i18n="freq_5min">Cada 5 min</option>
+            <option value="daily" data-i18n="freq_daily">Diariamente</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn teal" onclick="addReminder()" data-i18n="btn_add_rem"><i class="material-icons left">add_alert</i>Añadir</button>
+      <ul id="reminders-list" class="collection" style="margin-top: 20px; border: none;"></ul>
+    </section>
+
+<section id="settings-module" class="module">
+  <h4 class="teal-text" data-i18n="settings_title"><i class="material-icons left">settings</i> Configuración</h4>
+
+  <div class="row">
+    <div class="col s12 m6">
+      <div class="card-panel white" style="border-top: 4px solid #009688;">
+        <h6 class="teal-text"><b><i class="material-icons left">palette</i> <span data-i18n="settings_general">Personalización</span></b></h6>
+        
+        <label data-i18n="label_lang">Idioma</label>
+        <select id="language-select" class="browser-default" onchange="changeLanguage(this.value)" style="margin-bottom:15px;">
+          <option value="es">Español</option>
+          <option value="en">English</option>
+          <option value="it">Italiano</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="pt">Português</option>
+        </select>
+
+        <label data-i18n="label_theme">Tema</label>
+        <div class="switch" style="margin-bottom: 20px;">
+          <label>
+            <i class="material-icons tiny">light_mode</i>
+            <input type="checkbox" id="theme-switch" onchange="changeTheme(this.checked ? 'dark' : 'light')">
+            <span class="lever"></span>
+            <i class="material-icons tiny">dark_mode</i>
+          </label>
+        </div>
+
+        <label data-i18n="label_start_mod">Módulo al iniciar</label>
+        <select id="start-module-select" class="browser-default" onchange="setStartModule(this.value)">
+          <option value="pomodoro" data-i18n="nav_pomodoro">Pomodoro</option>
+          <option value="timer" data-i18n="nav_timer">Temporizador</option>
+          <option value="counter" data-i18n="nav_counter">Contadores</option>
+          <option value="checklist" data-i18n="nav_checklist">Checklist</option>
+          <option value="notes" data-i18n="nav_notes">Notas</option>
+          <option value="calculator" data-i18n="nav_calculator">Calculadora</option>
+          <option value="reminders" data-i18n="nav_reminders">Recordatorios</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="col s12 m6">
+      <div class="card-panel white" style="border-top: 4px solid #ff9800;">
+        <h6 class="orange-text text-darken-2"><b><i class="material-icons left">audiotrack</i> <span data-i18n="settings_sounds">Notificaciones</span></b></h6>
+        
+        <div class="switch" style="margin-bottom: 20px;">
+          <label>
+            Vibración Off
+            <input type="checkbox" id="vibration-switch" onchange="toggleVibration(this.checked)">
+            <span class="lever"></span>
+            On
+          </label>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <label data-i18n="label_sound_pomo">Pomodoro</label>
+          <div style="display: flex; gap: 5px;">
+            <select id="ringtone-pomodoro" class="browser-default" onchange="saveModuleRingtone('pomodoro', this.value)">
+              <option value="ringtone.mp3" data-i18n="sound_classic">Clásico</option>
+              <option value="eurythmic.mp3">Eurythmic</option>
+              <option value="twinkle_light.mp3">Twinkle Light</option>
+            </select>
+            <button class="btn-small teal" onclick="document.getElementById('upload-pomodoro').click()"><i class="material-icons">upload</i></button>
+          </div>
+          <input type="file" id="upload-pomodoro" accept="audio/*" style="display:none" onchange="handleFileUpload('pomodoro', this)">
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <label data-i18n="label_sound_timer">Temporizador</label>
+          <div style="display: flex; gap: 5px;">
+            <select id="ringtone-timer" class="browser-default" onchange="saveModuleRingtone('timer', this.value)">
+              <option value="ringtone.mp3" data-i18n="sound_classic">Clásico</option>
+              <option value="eurythmic.mp3">Eurythmic</option>
+              <option value="twinkle_light.mp3">Twinkle Light</option>
+            </select>
+            <button class="btn-small teal" onclick="document.getElementById('upload-timer').click()"><i class="material-icons">upload</i></button>
+          </div>
+          <input type="file" id="upload-timer" accept="audio/*" style="display:none" onchange="handleFileUpload('timer', this)">
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <label data-i18n="label_sound_rem">Recordatorios</label>
+          <div style="display: flex; gap: 5px;">
+            <select id="ringtone-reminders" class="browser-default" onchange="saveModuleRingtone('reminders', this.value)">
+              <option value="ringtone.mp3" data-i18n="sound_classic">Clásico</option>
+              <option value="eurythmic.mp3">Eurythmic</option>
+              <option value="twinkle_light.mp3">Twinkle Light</option>
+            </select>
+            <button class="btn-small teal" onclick="document.getElementById('upload-reminders').click()"><i class="material-icons">upload</i></button>
+          </div>
+          <input type="file" id="upload-reminders" accept="audio/*" style="display:none" onchange="handleFileUpload('reminders', this)">
+        </div>
+      </div>
+    </div>
+
+    <div class="col s12 m6">
+      <div class="card-panel white" style="border-top: 4px solid #2196f3;">
+        <h6 class="blue-text"><b><i class="material-icons left">storage</i> <span data-i18n="settings_data">Datos</span></b></h6>
+        <button class="btn-small blue darken-2 waves-effect" onclick="exportData()" style="width: 100%; margin-bottom: 10px;">
+          <i class="material-icons left">download</i> <span data-i18n="btn_export">Exportar</span>
+        </button>
+        <button class="btn-small blue-grey waves-effect" onclick="document.getElementById('import-file').click()" style="width: 100%; margin-bottom: 10px;">
+          <i class="material-icons left">upload</i> <span data-i18n="btn_import">Importar</span>
+        </button>
+        <button class="btn-small red white-text waves-effect" onclick="deleteAllData()" style="width: 100%;">
+          <i class="material-icons left">delete_forever</i> <span data-i18n="btn_delete_all">BORRAR TODO</span>
+        </button>
+        <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(this)">
+      </div>
+    </div>
+
+<div class="col s12 m6">
+  <div class="card-panel gold-gradient" id="premium-card" style="border: 2px solid #ffd700; background: linear-gradient(45deg, #fff9c4, #ffffff);">
+    <h6 class="orange-text text-darken-4"><b><i class="material-icons left">stars</i> Daily Tools Premium</b></h6>
+    <div id="premium-status-off">
+        <p style="font-size: 0.9rem;"data-i18n="premium_desc">Elimina la publicidad y apoya el desarrollo con un pago único.</p>
+        <div id="premium-container">
+			<button id="btn-get-premium" onclick="purchasePremium()" class="btn-large gold waves-effect waves-light" style="width: 100%; margin-bottom: 10px; font-weight: bold;">
+				<i class="material-icons left">stars</i> <span data-i18n="settings_premium_btn">OBTENER PREMIUM</span>
+			</button>
+			<button id="btn-restore-premium" onclick="restorePurchases()" class="btn-flat teal-text" style="width: 100%; text-decoration: underline;">
+				<span data-i18n="settings_restore_btn">Validar suscripción anterior</span>
+			</button>
+		</div>
+    </div>
+    <div id="premium-status-on" style="display:none;">
+        <p class="green-text"><b data-i18n="user_premium"><i class="material-icons tiny">check_circle</i> ¡Ya eres usuario Premium!</b></p>
+    </div>
+  </div>
+</div>
+
+    <div class="col s12 m6">
+      <div class="card-panel white" style="border-top: 4px solid #9c27b0;">
+        <h6 class="purple-text"><b data-i18n="settings_support"><i class="material-icons left">info</i> Soporte</b></h6>
+        <a href="mailto:patiniuscompany@gmail.com" class="btn-small purple darken-2 waves-effect" style="width: 100%; margin-bottom: 10px;">
+          <i class="material-icons left">email</i> <span data-i18n="btn_contact">Contacto</span>
+        </a>
+        <p style="margin: 0; font-size: 0.8rem;">
+          <b data-i18n="settings_version">Versión</b>: 1.0.0<br>
+          <a href="#" onclick="showPrivacy()" data-i18n="settings_privacy">Política de Privacidad</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+  </main>
+
+  <div id="note-modal" class="modal">
+    <div class="modal-content">
+      <h4 data-i18n="modal_note_title">Editar Nota</h4>
+      <textarea id="modal-note-text" class="materialize-textarea" style="min-height: 150px;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button id="save-modal-note" class="modal-close btn teal" data-i18n="btn_save">Guardar</button>
+    </div>
+  </div>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js');
+  }
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="languages.js"></script>
+  <script src="notify.js"></script>
+  <script src="menu.js"></script>
+  <script src="pomodoro.js"></script>
+  <script src="timers.js"></script>
+  <script src="counters.js"></script>
+  <script src="checklist.js"></script>
+  <script src="notes.js"></script>
+  <script src="calculator.js"></script>
+  <script src="reminders.js"></script>
+  <script src="settings.js"></script>
+
+</body>
+</html>
