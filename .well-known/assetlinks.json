@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.netlify.gilded_arithmetic_238350.twa",
+        "sha256_cert_fingerprints": ["1B:D2:59:0B:8B:C8:CF:B8:35:F3:A4:E0:3C:20:D0:95:32:D2:59:3B:1A:C9:F8:6C:1B:1C:B9:32:5E:55:22:6D"]
+      }
+    }]
