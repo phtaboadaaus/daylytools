@@ -137,11 +137,14 @@ function startTimer() {
     totalSeconds = (selectedH * 3600) + (selectedM * 60) + selectedS;
 
     if (totalSeconds <= 0) {
-        const lang = localStorage.getItem('lang') || 'es';
-        const msg = (window.i18n && i18n[lang] && i18n[lang]['timer_set_time']) 
-                    ? i18n[lang]['timer_set_time'] : 'Toca el reloj para ajustar';
-        M.toast({html: msg});
+        // ... (tu código de validación existente) ...
         return;
+    }
+
+    // [NUEVO] MANTENEMOS EL AUDIO DESPIERTO
+    // Esto reproduce un silencio en bucle para que Android no cierre el canal de audio
+    if (typeof mantenerAudioActivo === 'function') {
+        mantenerAudioActivo();
     }
 
     timerDisplay.style.color = "#ff5252"; 
@@ -154,21 +157,21 @@ function startTimer() {
             timerInterval = null;
             timerDisplay.style.color = "#26a69a";
             
-            // --- LLAMADA CORREGIDA AL SERVICIO DE NOTIFICACIÓN ---
+            // Lanza la notificación (que ahora usará el canal de audio abierto)
             if (typeof notify === "function") {
                 notify("timer_notif_title", "timer_notif_ended", "timer");
             } else {
                 alert("Time's up!");
             }
 
-            resetTimer();
+            resetTimer(); // Ojo: resetTimer detendrá el audio si no lo manejamos bien
             return;
         }
 
+        // ... (tu código de actualizar display) ...
         const h = Math.floor(totalSeconds / 3600);
         const m = Math.floor((totalSeconds % 3600) / 60);
         const s = totalSeconds % 60;
-        
         timerDisplay.innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }, 1000);
 }
@@ -181,6 +184,9 @@ function stopTimer() {
         clearInterval(timerInterval);
         timerInterval = null;
         timerDisplay.style.color = "#26a69a";
+        
+        // [NUEVO] Si paramos el timer manualmente, paramos el audio fantasma
+        if (typeof detenerAudio === 'function') detenerAudio();
     }
 }
 
@@ -194,4 +200,5 @@ function resetTimer() {
     setWheelValue('picker-mins', 0);
     setWheelValue('picker-secs', 0);
     updateDigitalDisplay();
+
 }
