@@ -59,39 +59,29 @@ function notify(titleKey, textKey, module = "pomodoro") {
 // 2. Lógica de Audio
     try {
         const filename = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
-        let source;
         
-        if (filename === "CUSTOM_FILE") {
-            source = localStorage.getItem(`custom_audio_${module}`);
-        } else {
-            // Usamos la ruta más simple posible
-            source = `assets/ringtones/${filename}`;
-        }
+        // Obtenemos la base de la URL (ej: https://phtaboadaaus.github.io/daylytools/)
+        const pathArray = window.location.pathname.split('/');
+        pathArray.pop(); // Quitamos "index.html"
+        const baseDir = pathArray.join('/');
+        const fullUrl = `${window.location.origin}${baseDir}/assets/ringtones/${filename}`;
 
-        if (source) {
-            console.log("Intentando reproducir:", source);
+        if (fullUrl) {
+            console.log("🔊 Ruta final generada:", fullUrl);
             
             globalAudio.pause();
-            globalAudio.src = source;
+            globalAudio.src = fullUrl;
             globalAudio.loop = true;
             globalAudio.volume = 1.0;
-
-            // IMPORTANTE: Forzamos el reset del motor de audio
             globalAudio.load(); 
 
             setTimeout(() => {
-                const playPromise = globalAudio.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        console.log("✅ El navegador confirma reproducción de:", source);
-                    }).catch(e => {
-                        console.error("❌ Error de reproducción física:", e);
-                        // Si falla, es que el archivo assets/ringtones/ringtone.mp3 NO EXISTE realmente
-                    });
-                }
-            }, 200);
+                globalAudio.play()
+                    .then(() => console.log("✅ Sonando físicamente"))
+                    .catch(e => console.error("❌ Bloqueo de reproducción:", e));
+            }, 250);
         }
-    } catch (e) { console.error("Error crítico notify.js:", e); }
+    } catch (e) { console.error("Error en notify.js:", e); }
 
     // 3. Ventana Interna (Toast Persistente con botón OK)
     if (typeof M !== 'undefined') {
@@ -123,6 +113,7 @@ function notify(titleKey, textKey, module = "pomodoro") {
         });
     }
 }
+
 
 
 
