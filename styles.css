@@ -650,3 +650,64 @@ body.dark-mode #btn-restore-premium {
 
 }
 
+/* =========================================
+   11. ALERTA TOAST
+   ========================================= */
+/* Contenedor principal del Toast de Alarma */
+.alarm-toast {
+    background-color: #323232 !important; /* Gris muy oscuro, funciona en ambos modos */
+    border-left: 6px solid #ffeb3b; /* Franja amarilla de alerta */
+    padding: 10px 15px !important;
+    min-width: 300px !important;
+}
+
+/* Contenedor flexible para alinear texto y botón */
+.toast-content-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.toast-text {
+    line-height: 1.2;
+    margin-right: 10px;
+}
+
+/* Botón de STOP con efecto de pulso (Onda expansiva) */
+.btn-stop-alarm {
+    color: #ffeb3b !important;
+    font-weight: bold !important;
+    border: 1px solid #ffeb3b !important;
+    border-radius: 4px !important;
+    padding: 0 10px !important;
+    background: transparent;
+    transition: all 0.3s;
+    /* Animación de onda expansiva */
+    animation: pulse-yellow 1.5s infinite;
+}
+
+@keyframes pulse-yellow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 235, 59, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 235, 59, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 235, 59, 0);
+    }
+}
+
+/* Ajuste para móviles: evita que el botón se salga */
+@media only screen and (max-width: 600px) {
+    .alarm-toast {
+        min-width: 100% !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+    .btn-stop-alarm {
+        padding: 0 5px !important;
+        font-size: 0.9rem;
+    }
+}
