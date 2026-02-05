@@ -120,22 +120,26 @@ function setWheelValue(id, value) {
  * Actualiza el texto HH:MM:SS en el display principal
  */
 function updateDigitalDisplay() {
+    // Calculamos el total basado en lo que el usuario movió en las ruedas
+    totalSeconds = (selectedH * 3600) + (selectedM * 60) + selectedS;
+    
     const h = String(selectedH).padStart(2, '0');
     const m = String(selectedM).padStart(2, '0');
     const s = String(selectedS).padStart(2, '0');
+    
     if (timerDisplay) {
         timerDisplay.innerText = `${h}:${m}:${s}`;
     }
 }
-
 /**
  * Inicia la cuenta atrás y maneja la alarma al finalizar
  */
 function startTimer() {
     if (timerInterval) return;
 
+    // Si después de calcular sigue en 0, entonces sí avisamos
     if (totalSeconds <= 0) {
-        M.toast({ html: 'Selecciona un tiempo' });
+        M.toast({ html: 'Selecciona un tiempo', classes: 'rounded' });
         return;
     }
 
@@ -152,12 +156,10 @@ function startTimer() {
             timerDisplay.innerText = "00:00:00";
             timerDisplay.style.color = "#26a69a";
             
-            // LANZAR NOTIFICACIÓN
             if (typeof notify === "function") {
                 notify("timer_notif_title", "timer_notif_ended", "timer");
             }
-
-            // IMPORTANTE: Hemos quitado resetTimer() de aquí para que no mate el audio.
+            // IMPORTANTE: No reseteamos aquí para que el audio no se corte
             return;
         }
 
@@ -167,7 +169,6 @@ function startTimer() {
         timerDisplay.innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }, 1000);
 }
-
 /**
  * Pausa el temporizador
  */
@@ -185,11 +186,22 @@ function stopTimer() {
  * Reinicia todo a cero y resetea las ruedas
  */
 function resetTimer() {
-    stopTimer();
-    selectedH = 0; selectedM = 0; selectedS = 0;
-    setWheelValue('picker-hours', 0);
-    setWheelValue('picker-mins', 0);
-    setWheelValue('picker-secs', 0);
-    updateDigitalDisplay();
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
 
+    if (typeof detenerAudio === 'function') detenerAudio();
+
+    selectedH = 0; selectedM = 0; selectedS = 0;
+    totalSeconds = 0;
+
+    // Devolvemos los rodillos al inicio visualmente
+    ['picker-hours', 'picker-mins', 'picker-secs'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    timerDisplay.style.color = "#26a69a";
+    updateDigitalDisplay();
 }
