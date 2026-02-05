@@ -16,11 +16,7 @@ const ASSETS = [
   'reminders.js',
   'settings.js',
   'timers.js',
-  'assets/splash.png',
-  'assets/ringtones/eurythmic.mp3',
-  'assets/ringtones/ringtone.mp3',
-  'assets/ringtones/ringtone30s.mp3',
-  'assets/ringtones/twinkle_light.mp3'
+  'assets/splash.png'
 ];
 
 // 1. Instalación rápida
@@ -72,3 +68,4 @@ self.addEventListener('notificationclick', event => {
     })
   );
 });
+
