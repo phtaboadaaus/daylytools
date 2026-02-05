@@ -19,9 +19,16 @@ function changeLanguage(lang) {
             if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
                 el.placeholder = texts[key];
             } else {
-                const icon = el.querySelector('i');
-                el.textContent = texts[key];
-                if (icon) el.prepend(icon); 
+                // 1. Guardamos el icono si existe para no perderlo
+                const icon = el.querySelector('i.material-icons');
+                
+                // 2. Usamos innerHTML para que las etiquetas <b> funcionen
+                el.innerHTML = texts[key];
+                
+                // 3. Si había un icono, lo volvemos a poner al principio
+                if (icon) {
+                    el.prepend(icon);
+                }
             }
         }
     });
@@ -271,5 +278,6 @@ document.addEventListener('DOMContentLoaded', () => {
     checkPremiumStatus();
 
 });
+
 
 
