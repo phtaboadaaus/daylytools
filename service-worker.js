@@ -43,21 +43,27 @@ self.addEventListener('fetch', event => {
     )
   );
 });
-// service-worker.js
 
-// Escuchar cuando el usuario hace clic en la notificación
+// Este código va dentro de service-worker.js
 self.addEventListener('notificationclick', function(event) {
-  event.notification.close(); // Cerrar la notificación
-
-  // Abrir la app o ponerla en primer plano
-  event.waitUntil(
-    clients.matchAll({ type: 'window' }).then(windowClients => {
-      if (windowClients.length > 0) {
-        return windowClients[0].focus();
-      }
-      return clients.openWindow('/');
-    })
-  );
+    event.notification.close(); // Cierra el banner al tocarlo
+    
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+            // Si la app está abierta, ponla en foco
+            for (let i = 0; i < clientList.length; i++) {
+                let client = clientList[i];
+                if (client.url === '/' && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // Si está cerrada, ábrela
+            if (clients.openWindow) {
+                return clients.openWindow('./');
+            }
+        })
+    );
 });
+
 
 
