@@ -40,7 +40,7 @@ function saveModuleRingtone(module, filename) {
     if (filename === "CUSTOM_FILE") {
         source = localStorage.getItem(`custom_audio_${module}`);
     } else {
-        source = `${window.location.origin}${baseDir}assets/ringtones/${filename}`;
+        source = `assets/ringtones/${filename}`;
     }
 
     if (source) {
@@ -271,4 +271,5 @@ document.addEventListener('DOMContentLoaded', () => {
     checkPremiumStatus();
 
 });
+
 
