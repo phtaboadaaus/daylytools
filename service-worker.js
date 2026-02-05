@@ -43,4 +43,21 @@ self.addEventListener('fetch', event => {
     )
   );
 });
+// service-worker.js
+
+// Escuchar cuando el usuario hace clic en la notificación
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close(); // Cerrar la notificación
+
+  // Abrir la app o ponerla en primer plano
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then(windowClients => {
+      if (windowClients.length > 0) {
+        return windowClients[0].focus();
+      }
+      return clients.openWindow('/');
+    })
+  );
+});
+
 
