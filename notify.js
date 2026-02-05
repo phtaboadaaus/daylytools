@@ -56,28 +56,35 @@ function notify(titleKey, textKey, module = "pomodoro") {
     let text = (translations[lang] && translations[lang][textKey]) ? translations[lang][textKey] : textKey;
 
     // 2. Lógica de Audio (Soporte archivos locales y subidos)
-    // 2. Lógica de Audio (Soporte archivos locales y subidos)
     try {
         const filename = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
+        let source;
         
-        // --- AQUÍ ESTÁ LA CORRECCIÓN ---
-        // Definimos baseUrl obteniendo la dirección actual de la página
-        const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
-        
-        let source = (filename === "CUSTOM_FILE") 
-            ? localStorage.getItem(`custom_audio_${module}`) 
-            : `${baseUrl}assets/ringtones/${filename}`;
-        // -------------------------------
+        if (filename === "CUSTOM_FILE") {
+            source = localStorage.getItem(`custom_audio_${module}`);
+        } else {
+            // FORMA MÁS SEGURA Y COMPATIBLE:
+            // Intentamos cargar desde la raíz del proyecto
+            source = `./assets/ringtones/${filename}`;
+        }
 
         if (source) {
-            console.log("Cargando audio desde:", source); // Para que veas en consola la ruta real
+            console.log("Cargando audio desde:", source);
             globalAudio.pause();
             globalAudio.src = source;
+            globalAudio.load(); // Forzamos la carga del archivo antes de reproducir
             globalAudio.loop = true;
             globalAudio.volume = 1.0;
             
             setTimeout(() => {
-                globalAudio.play().catch(e => console.warn("Reproducción bloqueada:", e));
+                globalAudio.play().catch(e => {
+                    console.error("Error al reproducir. Intentando ruta alternativa...");
+                    // Si falla, intentamos sin el ./ por si acaso
+                    if (!source.startsWith('data:')) {
+                        globalAudio.src = `assets/ringtones/${filename}`;
+                        globalAudio.play().catch(err => console.log("Audio totalmente bloqueado o no existe"));
+                    }
+                });
             }, 150);
         }
     } catch (e) { console.error("Error cargando audio:", e); }
@@ -112,6 +119,7 @@ function notify(titleKey, textKey, module = "pomodoro") {
         });
     }
 }
+
 
 
 
