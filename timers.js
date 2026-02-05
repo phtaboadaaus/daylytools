@@ -143,6 +143,7 @@ function startTimer() {
         return;
     }
 
+    // Activamos el canal de audio "fantasma" para que el navegador no bloquee el sonido final
     if (typeof mantenerAudioActivo === 'function') mantenerAudioActivo();
 
     timerDisplay.style.color = "#e57373";
@@ -151,18 +152,24 @@ function startTimer() {
         totalSeconds--;
 
         if (totalSeconds <= 0) {
+            // 1. Detenemos el reloj inmediatamente
             clearInterval(timerInterval);
             timerInterval = null;
             timerDisplay.innerText = "00:00:00";
             timerDisplay.style.color = "#26a69a";
             
-            if (typeof notify === "function") {
-                notify("timer_notif_title", "timer_notif_ended", "timer");
-            }
-            // IMPORTANTE: No reseteamos aquí para que el audio no se corte
+            // 2. Ejecutamos la notificación con un pequeño retraso de 100ms
+            // Esto evita que el audio se corte por procesos residuales del setInterval
+            setTimeout(() => {
+                if (typeof notify === "function") {
+                    notify("timer_notif_title", "timer_notif_ended", "timer");
+                }
+            }, 100);
+
             return;
         }
 
+        // Actualización visual del tiempo
         const h = Math.floor(totalSeconds / 3600);
         const m = Math.floor((totalSeconds % 3600) / 60);
         const s = totalSeconds % 60;
@@ -205,3 +212,4 @@ function resetTimer() {
     timerDisplay.style.color = "#26a69a";
     updateDigitalDisplay();
 }
+
