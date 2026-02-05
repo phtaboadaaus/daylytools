@@ -1,5 +1,5 @@
 /**
- * LÓGICA DEL TEMPORIZADOR CON SELECTOR MODAL - Daily Tools
+ * LÓGICA DEL TEMPORIZADOR CON SELECTOR MODAL
  */
 
 let timerInterval = null;
@@ -38,86 +38,107 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('timer-start').onclick = startTimer;
     document.getElementById('timer-stop').onclick = stopTimer;
     document.getElementById('timer-reset').onclick = resetTimer;
-    
-    // Abrir modal al hacer click en el display
-    timerDisplay.onclick = () => {
-        if (!timerInterval) pickerModalInstance.open();
-    };
+
+    // 4. Lógica de Presets (Botones de acceso rápido)
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.onclick = () => {
+            stopTimer();
+            const mins = parseInt(btn.getAttribute('data-time'));
+            selectedH = 0;
+            selectedM = mins;
+            selectedS = 0;
+            
+            // Sincronizar las ruedas visualmente
+            setWheelValue('picker-hours', 0);
+            setWheelValue('picker-mins', mins);
+            setWheelValue('picker-secs', 0);
+            
+            updateDigitalDisplay();
+        };
+    });
 });
 
 /**
- * Crea las opciones de las ruedas de desplazamiento y gestiona el estilo
+ * Abre el modal del selector si el timer no está corriendo
  */
-function createWheel(id, max) {
-    const wheel = document.getElementById(id);
-    if (!wheel) return;
-
-    wheel.innerHTML = '';
-    // Espacio vacío arriba para centrar el primer número
-    const spacerTop = document.createElement('div');
-    spacerTop.style.height = "80px";
-    wheel.appendChild(spacerTop);
-
-    for (let i = 0; i <= max; i++) {
-        const item = document.createElement('div');
-        item.className = 'wheel-item';
-        item.innerText = String(i).padStart(2, '0');
-        wheel.appendChild(item);
-    }
-
-    // Espacio vacío abajo
-    const spacerBottom = document.createElement('div');
-    spacerBottom.style.height = "80px";
-    wheel.appendChild(spacerBottom);
-
-    wheel.addEventListener('scroll', () => {
-        clearTimeout(wheel.scrollTimeout);
-        wheel.scrollTimeout = setTimeout(() => {
-            const index = Math.round(wheel.scrollTop / 40);
-            const targetY = index * 40;
-            
-            wheel.scrollTo({ top: targetY, behavior: 'smooth' });
-
-            if (id === 'picker-hours') selectedH = index;
-            if (id === 'picker-mins') selectedM = index;
-            if (id === 'picker-secs') selectedS = index;
-
-            updateSelectedStyle(wheel);
-        }, 150);
-    });
+function openTimerPicker() {
+    if (timerInterval) return; 
+    pickerModalInstance.open();
 }
 
-function updateSelectedStyle(wheel) {
-    const items = wheel.querySelectorAll('.wheel-item');
-    const centerIndex = Math.round(wheel.scrollTop / 40);
-    items.forEach((item, idx) => {
-        item.classList.toggle('selected', idx === centerIndex);
+/**
+ * Crea la lista de números en la rueda de scroll
+ */
+function createWheel(id, max) {
+    const viewport = document.getElementById(id);
+    if (!viewport) return;
+    const wheel = viewport.querySelector('.picker-wheel');
+    
+    wheel.innerHTML = '<div class="picker-spacer" style="height:40px;"></div>'; 
+    for (let i = 0; i <= max; i++) {
+        const num = document.createElement('div');
+        num.className = 'picker-number';
+        num.textContent = String(i).padStart(2, '0');
+        wheel.appendChild(num);
+    }
+    wheel.innerHTML += '<div class="picker-spacer" style="height:40px;"></div>';
+
+    // Listener de scroll para detectar el número central
+    viewport.addEventListener('scroll', () => {
+        if (timerInterval) return;
+        const index = Math.round(viewport.scrollTop / 40);
+        const numbers = wheel.querySelectorAll('.picker-number');
+        
+        numbers.forEach(n => n.classList.remove('selected'));
+        if (numbers[index]) {
+            numbers[index].classList.add('selected');
+            const val = parseInt(numbers[index].textContent);
+            
+            if (id === 'picker-hours') selectedH = val;
+            if (id === 'picker-mins') selectedM = val;
+            if (id === 'picker-secs') selectedS = val;
+            
+            updateDigitalDisplay();
+        }
     });
 }
 
 /**
- * Actualiza el texto del cronómetro basado en los pickers
+ * Mueve el scroll de la rueda a una posición específica
+ */
+function setWheelValue(id, value) {
+    const viewport = document.getElementById(id);
+    if (viewport) {
+        viewport.scrollTo({
+            top: value * 40,
+            behavior: 'smooth'
+        });
+    }
+}
+
+/**
+ * Actualiza el texto HH:MM:SS en el display principal
  */
 function updateDigitalDisplay() {
-    totalSeconds = (selectedH * 3600) + (selectedM * 60) + selectedS;
     const h = String(selectedH).padStart(2, '0');
     const m = String(selectedM).padStart(2, '0');
     const s = String(selectedS).padStart(2, '0');
-    timerDisplay.innerText = `${h}:${m}:${s}`;
+    if (timerDisplay) {
+        timerDisplay.innerText = `${h}:${m}:${s}`;
+    }
 }
 
 /**
- * Inicia el conteo regresivo
+ * Inicia la cuenta atrás y maneja la alarma al finalizar
  */
 function startTimer() {
     if (timerInterval) return;
 
     if (totalSeconds <= 0) {
-        M.toast({ html: 'Selecciona un tiempo', classes: 'rounded' });
+        M.toast({ html: 'Selecciona un tiempo' });
         return;
     }
 
-    // Desbloquear audio
     if (typeof mantenerAudioActivo === 'function') mantenerAudioActivo();
 
     timerDisplay.style.color = "#e57373";
@@ -131,12 +152,12 @@ function startTimer() {
             timerDisplay.innerText = "00:00:00";
             timerDisplay.style.color = "#26a69a";
             
-            // --- EL ARREGLO ESTÁ AQUÍ ---
-            // Lanzamos la notificación
+            // LANZAR NOTIFICACIÓN
             if (typeof notify === "function") {
                 notify("timer_notif_title", "timer_notif_ended", "timer");
             }
-            // NO llamamos a resetTimer() para que no se apague el sonido
+
+            // IMPORTANTE: Hemos quitado resetTimer() de aquí para que no mate el audio.
             return;
         }
 
@@ -156,30 +177,19 @@ function stopTimer() {
         timerInterval = null;
         timerDisplay.style.color = "#26a69a";
     }
-    // Si el usuario le da a STOP, entendemos que quiere silenciar la alarma también
+    // Si paramos el timer manualmente, silenciamos el audio global
     if (typeof detenerAudio === 'function') detenerAudio();
 }
 
 /**
- * Reinicia el temporizador
+ * Reinicia todo a cero y resetea las ruedas
  */
 function resetTimer() {
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    }
-
-    if (typeof detenerAudio === 'function') detenerAudio();
-
+    stopTimer();
     selectedH = 0; selectedM = 0; selectedS = 0;
-    totalSeconds = 0;
-
-    const wheels = ['picker-hours', 'picker-mins', 'picker-secs'];
-    wheels.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-
-    timerDisplay.style.color = "#26a69a";
+    setWheelValue('picker-hours', 0);
+    setWheelValue('picker-mins', 0);
+    setWheelValue('picker-secs', 0);
     updateDigitalDisplay();
+
 }
