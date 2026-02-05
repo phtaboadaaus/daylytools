@@ -16,7 +16,7 @@ async function initNotifications() {
         globalAudio.play().then(() => {
             globalAudio.pause();
             globalAudio.muted = false;
-        }).catch(e => console.log("Audio esperando interacción"));
+        }).catch(err => console.error("ERROR CRÍTICO DE AUDIO:", err));
         document.removeEventListener('click', unlockAudio);
         document.removeEventListener('touchstart', unlockAudio);
     };
@@ -109,3 +109,4 @@ function notify(titleKey, textKey, module = "pomodoro") {
         new Notification(title, options);
     }
 }
+
