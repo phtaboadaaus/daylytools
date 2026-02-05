@@ -60,7 +60,7 @@ function notify(titleKey, textKey, module = "pomodoro") {
         const filename = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
         let source = (filename === "CUSTOM_FILE") 
             ? localStorage.getItem(`custom_audio_${module}`) 
-            : `assets/ringtones/${filename}`;
+            : `${baseUrl}assets/ringtones/${filename}`;
 
         if (source) {
             globalAudio.src = source;
@@ -103,4 +103,5 @@ function notify(titleKey, textKey, module = "pomodoro") {
         });
     }
 }
+
 
