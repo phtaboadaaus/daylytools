@@ -38,16 +38,26 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('timer-start').onclick = startTimer;
     document.getElementById('timer-stop').onclick = stopTimer;
     document.getElementById('timer-reset').onclick = resetTimer;
+    
+    // Abrir modal al hacer click en el display
+    timerDisplay.onclick = () => {
+        if (!timerInterval) pickerModalInstance.open();
+    };
 });
 
 /**
- * Crea las opciones de las ruedas de desplazamiento
+ * Crea las opciones de las ruedas de desplazamiento y gestiona el estilo
  */
 function createWheel(id, max) {
     const wheel = document.getElementById(id);
     if (!wheel) return;
 
     wheel.innerHTML = '';
+    // Espacio vacío arriba para centrar el primer número
+    const spacerTop = document.createElement('div');
+    spacerTop.style.height = "80px";
+    wheel.appendChild(spacerTop);
+
     for (let i = 0; i <= max; i++) {
         const item = document.createElement('div');
         item.className = 'wheel-item';
@@ -55,18 +65,33 @@ function createWheel(id, max) {
         wheel.appendChild(item);
     }
 
-    // Listener de scroll para capturar el valor seleccionado
+    // Espacio vacío abajo
+    const spacerBottom = document.createElement('div');
+    spacerBottom.style.height = "80px";
+    wheel.appendChild(spacerBottom);
+
     wheel.addEventListener('scroll', () => {
         clearTimeout(wheel.scrollTimeout);
         wheel.scrollTimeout = setTimeout(() => {
             const index = Math.round(wheel.scrollTop / 40);
-            wheel.scrollTo({ top: index * 40, behavior: 'smooth' });
+            const targetY = index * 40;
+            
+            wheel.scrollTo({ top: targetY, behavior: 'smooth' });
 
-            // Guardar valores según el ID
             if (id === 'picker-hours') selectedH = index;
             if (id === 'picker-mins') selectedM = index;
             if (id === 'picker-secs') selectedS = index;
-        }, 100);
+
+            updateSelectedStyle(wheel);
+        }, 150);
+    });
+}
+
+function updateSelectedStyle(wheel) {
+    const items = wheel.querySelectorAll('.wheel-item');
+    const centerIndex = Math.round(wheel.scrollTop / 40);
+    items.forEach((item, idx) => {
+        item.classList.toggle('selected', idx === centerIndex);
     });
 }
 
@@ -85,17 +110,17 @@ function updateDigitalDisplay() {
  * Inicia el conteo regresivo
  */
 function startTimer() {
-    if (timerInterval) return; // Evitar múltiples intervalos
+    if (timerInterval) return;
 
     if (totalSeconds <= 0) {
-        M.toast({ html: 'Selecciona un tiempo primero', classes: 'rounded' });
+        M.toast({ html: 'Selecciona un tiempo', classes: 'rounded' });
         return;
     }
 
-    // Intentar desbloquear canal de audio si la función existe
+    // Desbloquear audio
     if (typeof mantenerAudioActivo === 'function') mantenerAudioActivo();
 
-    timerDisplay.style.color = "#e57373"; // Color activo (rojizo)
+    timerDisplay.style.color = "#e57373";
 
     timerInterval = setInterval(() => {
         totalSeconds--;
@@ -104,19 +129,17 @@ function startTimer() {
             clearInterval(timerInterval);
             timerInterval = null;
             timerDisplay.innerText = "00:00:00";
-            timerDisplay.style.color = "#26a69a"; // Volver al color original
+            timerDisplay.style.color = "#26a69a";
             
-            // LANZAR NOTIFICACIÓN
-            // IMPORTANTE: Aquí NO llamamos a resetTimer() porque resetTimer() apaga el audio.
+            // --- EL ARREGLO ESTÁ AQUÍ ---
+            // Lanzamos la notificación
             if (typeof notify === "function") {
                 notify("timer_notif_title", "timer_notif_ended", "timer");
-            } else {
-                alert("¡Tiempo agotado!");
             }
+            // NO llamamos a resetTimer() para que no se apague el sonido
             return;
         }
 
-        // Formatear HH:MM:SS
         const h = Math.floor(totalSeconds / 3600);
         const m = Math.floor((totalSeconds % 3600) / 60);
         const s = totalSeconds % 60;
@@ -132,29 +155,23 @@ function stopTimer() {
         clearInterval(timerInterval);
         timerInterval = null;
         timerDisplay.style.color = "#26a69a";
-        
-        // Si paramos el timer manualmente, paramos el audio
-        if (typeof detenerAudio === 'function') detenerAudio();
     }
+    // Si el usuario le da a STOP, entendemos que quiere silenciar la alarma también
+    if (typeof detenerAudio === 'function') detenerAudio();
 }
 
 /**
- * Reinicia el temporizador a cero
+ * Reinicia el temporizador
  */
 function resetTimer() {
-    // Primero detenemos el intervalo
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
     }
 
-    // Detener audio y limpiar notificaciones
     if (typeof detenerAudio === 'function') detenerAudio();
 
-    // Resetear variables y pickers
-    selectedH = 0;
-    selectedM = 0;
-    selectedS = 0;
+    selectedH = 0; selectedM = 0; selectedS = 0;
     totalSeconds = 0;
 
     const wheels = ['picker-hours', 'picker-mins', 'picker-secs'];
