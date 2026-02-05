@@ -38,7 +38,7 @@ function detenerAudio() {
     globalAudio.pause();
     globalAudio.currentTime = 0;
     globalAudio.loop = false;
-    // Cerramos los Toasts visibles
+    // Esto quita los Toasts de la pantalla
     if (typeof M !== 'undefined') {
         const toasts = document.querySelectorAll('.toast');
         toasts.forEach(t => {
@@ -103,3 +103,4 @@ function notify(titleKey, textKey, module = "pomodoro") {
         });
     }
 }
+
