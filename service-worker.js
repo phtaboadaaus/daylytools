@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daily-tools-v2'; // Cambiamos a v2 para forzar actualización
+const CACHE_NAME = 'daily-tools-v3'; // Versión actualizada
 
 const ASSETS = [
   './',
@@ -9,7 +9,7 @@ const ASSETS = [
   'calculator.js',
   'checklist.js',
   'counters.js',
-  'languages.js', // Corregido "languages"
+  'languages.js', 
   'menu.js',
   'notes.js',
   'notify.js',
@@ -28,10 +28,10 @@ const ASSETS = [
 
 // Instalación y almacenamiento en caché
 self.addEventListener('install', event => {
-  self.skipWaiting(); // Obliga al nuevo SW a tomar el control
+  self.skipWaiting(); 
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      console.log('Cacheando archivos...');
+      console.log('Actualizando caché a v3...');
       return cache.addAll(ASSETS);
     })
   );
@@ -51,6 +51,8 @@ self.addEventListener('activate', event => {
       );
     })
   );
+  // Reclamar clientes inmediatamente
+  return self.clients.claim();
 });
 
 // Estrategia de respuesta
@@ -65,16 +67,16 @@ self.addEventListener('fetch', event => {
 // Gestión de clics en la notificación
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
+  
+  // Si el usuario toca el botón "Cerrar/Entendido" o la notificación
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-      // Intentar enfocar la app si ya está abierta
       for (let i = 0; i < clientList.length; i++) {
         let client = clientList[i];
         if ('focus' in client) {
           return client.focus();
         }
       }
-      // Si no hay ninguna ventana abierta, abrir la app
       if (clients.openWindow) {
         return clients.openWindow('./');
       }
