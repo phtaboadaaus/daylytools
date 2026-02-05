@@ -95,7 +95,6 @@ try {
             </div>`;
         M.toast({ html: toastHTML, displayLength: 150000, classes: 'rounded' });
     }
-}
 
     // 4. Vibración
     if (localStorage.getItem('vibration') === 'true' && navigator.vibrate) {
@@ -115,6 +114,7 @@ try {
         });
     }
 }
+
 
 
 
