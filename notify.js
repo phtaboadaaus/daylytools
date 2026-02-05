@@ -56,6 +56,7 @@ function notify(titleKey, textKey, module = "pomodoro") {
     let text = (translations[lang] && translations[lang][textKey]) ? translations[lang][textKey] : textKey;
 
     // 2. Lógica de Audio (Soporte archivos locales y subidos)
+   // 2. Lógica de Audio
     try {
         const filename = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
         let source;
@@ -63,31 +64,36 @@ function notify(titleKey, textKey, module = "pomodoro") {
         if (filename === "CUSTOM_FILE") {
             source = localStorage.getItem(`custom_audio_${module}`);
         } else {
-            // FORMA MÁS SEGURA Y COMPATIBLE:
-            // Intentamos cargar desde la raíz del proyecto
-            source = `./assets/ringtones/${filename}`;
+            // USAMOS RUTA RELATIVA A LA RAÍZ (sin el punto inicial)
+            // Esto es lo más compatible para GitHub Pages
+            source = `assets/ringtones/${filename}`;
         }
 
         if (source) {
-            console.log("Cargando audio desde:", source);
+            console.log("Intentando cargar:", source);
+            
             globalAudio.pause();
             globalAudio.src = source;
-            globalAudio.load(); // Forzamos la carga del archivo antes de reproducir
             globalAudio.loop = true;
             globalAudio.volume = 1.0;
-            
+
+            // IMPORTANTE: Forzamos la carga antes de intentar reproducir
+            globalAudio.load(); 
+
             setTimeout(() => {
-                globalAudio.play().catch(e => {
-                    console.error("Error al reproducir. Intentando ruta alternativa...");
-                    // Si falla, intentamos sin el ./ por si acaso
+                globalAudio.play().then(() => {
+                    console.log("✅ ¡SONANDO!");
+                }).catch(e => {
+                    console.error("❌ Error de reproducción:", e);
+                    // Si falla por la ruta, intentamos un último recurso:
                     if (!source.startsWith('data:')) {
-                        globalAudio.src = `assets/ringtones/${filename}`;
-                        globalAudio.play().catch(err => console.log("Audio totalmente bloqueado o no existe"));
+                        globalAudio.src = 'ringtone.mp3'; // Intento desesperado si está en la raíz
+                        globalAudio.play().catch(() => {});
                     }
                 });
-            }, 150);
+            }, 200);
         }
-    } catch (e) { console.error("Error cargando audio:", e); }
+    } catch (e) { console.error("Error crítico notify.js:", e); }
 
     // 3. Ventana Interna (Toast Persistente con botón OK)
     if (typeof M !== 'undefined') {
@@ -119,6 +125,7 @@ function notify(titleKey, textKey, module = "pomodoro") {
         });
     }
 }
+
 
 
 
