@@ -56,19 +56,28 @@ function notify(titleKey, textKey, module = "pomodoro") {
     let text = (translations[lang] && translations[lang][textKey]) ? translations[lang][textKey] : textKey;
 
     // 2. Lógica de Audio (Soporte archivos locales y subidos)
+    // 2. Lógica de Audio (Soporte archivos locales y subidos)
     try {
         const filename = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
+        
+        // --- AQUÍ ESTÁ LA CORRECCIÓN ---
+        // Definimos baseUrl obteniendo la dirección actual de la página
+        const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+        
         let source = (filename === "CUSTOM_FILE") 
             ? localStorage.getItem(`custom_audio_${module}`) 
             : `${baseUrl}assets/ringtones/${filename}`;
+        // -------------------------------
 
         if (source) {
+            console.log("Cargando audio desde:", source); // Para que veas en consola la ruta real
+            globalAudio.pause();
             globalAudio.src = source;
             globalAudio.loop = true;
             globalAudio.volume = 1.0;
-            // Retardo de seguridad para que no lo pise el reset del timer
+            
             setTimeout(() => {
-                globalAudio.play().catch(e => console.warn("Reproducción bloqueada por navegador"));
+                globalAudio.play().catch(e => console.warn("Reproducción bloqueada:", e));
             }, 150);
         }
     } catch (e) { console.error("Error cargando audio:", e); }
@@ -103,5 +112,6 @@ function notify(titleKey, textKey, module = "pomodoro") {
         });
     }
 }
+
 
 
