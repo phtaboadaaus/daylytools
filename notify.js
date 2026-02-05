@@ -1,78 +1,94 @@
 /**
- * SERVICIO GLOBAL DE NOTIFICACIONES Y AUDIO
- * notify.js
+ * SERVICIO GLOBAL DE NOTIFICACIONES Y AUDIO - Daily Tools
+ * notify.js (Versión Completa Blindada)
  */
 
-// Creamos el audio globalmente
+// 1. CONFIGURACIÓN DE AUDIO GLOBAL
 const globalAudio = new Audio();
-// Pista de silencio (base64 de un mp3 vacío muy corto) para mantener el canal abierto
+// Pista de silencio para mantener el canal de audio abierto en segundo plano
 const SILENCE_TRACK = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjIwLjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD//////////////////////////////////////////////////////////////////wAAAP5MYXZjNTguMzUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/7EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAvwAAAAEALAAAAAAABQAAgAAAAP/7EMQAA9wAAAAAAAABAAAAAA5UAICAAAAAAAAAAAAAAAAAAAAAA/+//xDDEAAAZ4AAAAAAAACAAAAAA5UAICAAAAAAAAAAAAAAAAAAAAAA//sQxDsAAOWAAAAAAAANAAAAAA5UAICAAAAAAAAAAAAAAAAAAAAAA//tQxH8AAO8AAAAAAAARAAAAAA5UAICAAAAAAAAAAAAAAAAAAAAAA';
 
-// 1. INICIALIZAR (Pedir permisos)
+// 2. INICIALIZAR PERMISOS
 async function initNotifications() {
-    if ("Notification" in window && Notification.permission === "default") {
-        await Notification.requestPermission();
+    if ("Notification" in window) {
+        if (Notification.permission === "default") {
+            await Notification.requestPermission();
+        }
     }
 }
 initNotifications();
 
-// 2. FUNCIÓN PARA MANTENER EL AUDIO DESPIERTO (Llamar al iniciar Timer)
+// 3. FUNCIONES DE CONTROL DE AUDIO
 function mantenerAudioActivo() {
     globalAudio.src = SILENCE_TRACK;
-    globalAudio.loop = true; // Bucle infinito
-    globalAudio.volume = 0;  // Silencio total
-    globalAudio.play().catch(e => console.log("Audio background iniciado"));
+    globalAudio.loop = true; 
+    globalAudio.volume = 0;  
+    globalAudio.play().catch(e => console.log("Canal de audio en espera..."));
 }
 
-// 3. FUNCIÓN PARA DETENER EL "MANTENEDOR"
 function detenerAudio() {
     globalAudio.pause();
     globalAudio.loop = false;
-    globalAudio.volume = 1; // Restaurar volumen
+    globalAudio.volume = 1; 
 }
 
-// 4. FUNCIÓN PRINCIPAL DE NOTIFICACIÓN
+// 4. FUNCIÓN PRINCIPAL DE NOTIFICACIÓN (Lógica Visual y Sonora)
 function notify(titleKey, textKey, module = "pomodoro") {
-    // A. Preparar textos
+    // A. Traducción de textos
     const lang = localStorage.getItem('lang') || 'es';
     const translations = window.i18n || i18n; 
     let title = (translations && translations[lang]) ? (translations[lang][titleKey] || titleKey) : titleKey;
     let text = (translations && translations[lang]) ? (translations[lang][textKey] || textKey) : textKey;
 
-    // B. CAMBIAR AUDIO (El canal ya está abierto, el cambio es instantáneo)
+    // B. Gestión del Sonido de Alarma
     const saved = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
     let audioSource = (saved === "CUSTOM_FILE") 
         ? localStorage.getItem(`custom_audio_${module}`) 
         : `assets/ringtones/${saved}`;
 
     if (audioSource) {
-        // Ya no hacemos play() desde cero, sino que cambiamos el src del audio que ya está corriendo
         globalAudio.loop = false;
         globalAudio.volume = 1.0;
         globalAudio.src = audioSource;
         globalAudio.play().catch(e => console.warn("Error reproduciendo alarma:", e));
     }
 
-    // C. VIBRACIÓN
-    if (localStorage.getItem('vibration') === 'true' && navigator.vibrate) {
-        navigator.vibrate([500, 200, 500, 200, 500]);
-    }
-
-    // D. MOSTRAR NOTIFICACIÓN VISUAL (Primero Audio, luego Notificación)
+    // C. Configuración de la Notificación para Android/iOS/PC
     const options = { 
         body: text, 
         icon: 'assets/splash.png', 
         badge: 'assets/splash.png',
-        tag: 'dailytools-timer',
-        renotify: true
+        tag: 'dailytools-alert',    // Evita duplicados, reemplaza la anterior
+        renotify: true,             // Fuerza aviso sonoro/vibración si ya existe una
+        requireInteraction: true,   // Mantiene la notificación hasta que se descarte
+        vibrate: [200, 100, 200, 100, 200], // Patrón de vibración del sistema
+        silent: false,              // Asegura que no sea silenciosa
+        data: {
+            url: window.location.href 
+        }
     };
 
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.ready.then(reg => reg.showNotification(title, options));
-    } else if (window.Notification && Notification.permission === 'granted') {
+    // D. Vibración Manual (como refuerzo)
+    if (localStorage.getItem('vibration') === 'true' && navigator.vibrate) {
+        navigator.vibrate([500, 200, 500]);
+    }
+
+    // E. Lanzamiento de la Notificación Visual
+    // Prioridad 1: Service Worker (Mejor para móviles y apps cerradas)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification(title, options);
+        }).catch(err => {
+            console.error("Fallo SW, usando notificación normal:", err);
+            new Notification(title, options);
+        });
+    } 
+    // Prioridad 2: Notificación de Navegador Estándar
+    else if (window.Notification && Notification.permission === 'granted') {
         new Notification(title, options);
-    } else {
-        // Fallback visual si todo falla
-        M.toast({html: title + ": " + text, displayLength: 4000});
+    } 
+    // Prioridad 3: Toast (Si todo lo anterior falla o no hay permisos)
+    else {
+        M.toast({html: `<b>${title}</b>: ${text}`, displayLength: 8000});
     }
 }
