@@ -1,5 +1,5 @@
 /**
- * LÓGICA DEL TEMPORIZADOR CON SELECTOR MODAL
+ * LÓGICA DEL TEMPORIZADOR CON SELECTOR MODAL - Daily Tools
  */
 
 let timerInterval = null;
@@ -38,137 +38,85 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('timer-start').onclick = startTimer;
     document.getElementById('timer-stop').onclick = stopTimer;
     document.getElementById('timer-reset').onclick = resetTimer;
-
-    // 4. Lógica de Presets (Botones de acceso rápido)
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-        btn.onclick = () => {
-            stopTimer();
-            const mins = parseInt(btn.getAttribute('data-time'));
-            selectedH = 0;
-            selectedM = mins;
-            selectedS = 0;
-            
-            // Sincronizar las ruedas visualmente
-            setWheelValue('picker-hours', 0);
-            setWheelValue('picker-mins', mins);
-            setWheelValue('picker-secs', 0);
-            
-            updateDigitalDisplay();
-        };
-    });
 });
 
 /**
- * Abre el modal del selector si el timer no está corriendo
- */
-function openTimerPicker() {
-    if (timerInterval) return; 
-    pickerModalInstance.open();
-}
-
-/**
- * Crea la lista de números en la rueda de scroll
+ * Crea las opciones de las ruedas de desplazamiento
  */
 function createWheel(id, max) {
-    const viewport = document.getElementById(id);
-    if (!viewport) return;
-    const wheel = viewport.querySelector('.picker-wheel');
-    
-    wheel.innerHTML = '<div class="picker-spacer" style="height:40px;"></div>'; 
-    for (let i = 0; i <= max; i++) {
-        const num = document.createElement('div');
-        num.className = 'picker-number';
-        num.textContent = String(i).padStart(2, '0');
-        wheel.appendChild(num);
-    }
-    wheel.innerHTML += '<div class="picker-spacer" style="height:40px;"></div>';
+    const wheel = document.getElementById(id);
+    if (!wheel) return;
 
-    // Listener de scroll para detectar el número central
-    viewport.addEventListener('scroll', () => {
-        if (timerInterval) return;
-        const index = Math.round(viewport.scrollTop / 40);
-        const numbers = wheel.querySelectorAll('.picker-number');
-        
-        numbers.forEach(n => n.classList.remove('selected'));
-        if (numbers[index]) {
-            numbers[index].classList.add('selected');
-            const val = parseInt(numbers[index].textContent);
-            
-            if (id === 'picker-hours') selectedH = val;
-            if (id === 'picker-mins') selectedM = val;
-            if (id === 'picker-secs') selectedS = val;
-            
-            updateDigitalDisplay();
-        }
+    wheel.innerHTML = '';
+    for (let i = 0; i <= max; i++) {
+        const item = document.createElement('div');
+        item.className = 'wheel-item';
+        item.innerText = String(i).padStart(2, '0');
+        wheel.appendChild(item);
+    }
+
+    // Listener de scroll para capturar el valor seleccionado
+    wheel.addEventListener('scroll', () => {
+        clearTimeout(wheel.scrollTimeout);
+        wheel.scrollTimeout = setTimeout(() => {
+            const index = Math.round(wheel.scrollTop / 40);
+            wheel.scrollTo({ top: index * 40, behavior: 'smooth' });
+
+            // Guardar valores según el ID
+            if (id === 'picker-hours') selectedH = index;
+            if (id === 'picker-mins') selectedM = index;
+            if (id === 'picker-secs') selectedS = index;
+        }, 100);
     });
 }
 
 /**
- * Mueve el scroll de la rueda a una posición específica
- */
-function setWheelValue(id, value) {
-    const viewport = document.getElementById(id);
-    if (viewport) {
-        viewport.scrollTo({
-            top: value * 40,
-            behavior: 'smooth'
-        });
-    }
-}
-
-/**
- * Actualiza el texto HH:MM:SS en el display principal
+ * Actualiza el texto del cronómetro basado en los pickers
  */
 function updateDigitalDisplay() {
+    totalSeconds = (selectedH * 3600) + (selectedM * 60) + selectedS;
     const h = String(selectedH).padStart(2, '0');
     const m = String(selectedM).padStart(2, '0');
     const s = String(selectedS).padStart(2, '0');
-    if (timerDisplay) {
-        timerDisplay.innerText = `${h}:${m}:${s}`;
-    }
+    timerDisplay.innerText = `${h}:${m}:${s}`;
 }
 
 /**
- * Inicia la cuenta atrás y maneja la alarma al finalizar
+ * Inicia el conteo regresivo
  */
 function startTimer() {
-    if (timerInterval) return;
-
-    totalSeconds = (selectedH * 3600) + (selectedM * 60) + selectedS;
+    if (timerInterval) return; // Evitar múltiples intervalos
 
     if (totalSeconds <= 0) {
-        // ... (tu código de validación existente) ...
+        M.toast({ html: 'Selecciona un tiempo primero', classes: 'rounded' });
         return;
     }
 
-    // [NUEVO] MANTENEMOS EL AUDIO DESPIERTO
-    // Esto reproduce un silencio en bucle para que Android no cierre el canal de audio
-    if (typeof mantenerAudioActivo === 'function') {
-        mantenerAudioActivo();
-    }
+    // Intentar desbloquear canal de audio si la función existe
+    if (typeof mantenerAudioActivo === 'function') mantenerAudioActivo();
 
-    timerDisplay.style.color = "#ff5252"; 
+    timerDisplay.style.color = "#e57373"; // Color activo (rojizo)
 
     timerInterval = setInterval(() => {
         totalSeconds--;
 
-        if (totalSeconds < 0) {
+        if (totalSeconds <= 0) {
             clearInterval(timerInterval);
             timerInterval = null;
-            timerDisplay.style.color = "#26a69a";
+            timerDisplay.innerText = "00:00:00";
+            timerDisplay.style.color = "#26a69a"; // Volver al color original
             
-            // Lanza la notificación (que ahora usará el canal de audio abierto)
+            // LANZAR NOTIFICACIÓN
+            // IMPORTANTE: Aquí NO llamamos a resetTimer() porque resetTimer() apaga el audio.
             if (typeof notify === "function") {
                 notify("timer_notif_title", "timer_notif_ended", "timer");
             } else {
-                alert("Time's up!");
+                alert("¡Tiempo agotado!");
             }
-
-            resetTimer(); // Ojo: resetTimer detendrá el audio si no lo manejamos bien
             return;
         }
 
-        // ... (tu código de actualizar display) ...
+        // Formatear HH:MM:SS
         const h = Math.floor(totalSeconds / 3600);
         const m = Math.floor((totalSeconds % 3600) / 60);
         const s = totalSeconds % 60;
@@ -185,20 +133,36 @@ function stopTimer() {
         timerInterval = null;
         timerDisplay.style.color = "#26a69a";
         
-        // [NUEVO] Si paramos el timer manualmente, paramos el audio fantasma
+        // Si paramos el timer manualmente, paramos el audio
         if (typeof detenerAudio === 'function') detenerAudio();
     }
 }
 
 /**
- * Reinicia todo a cero y resetea las ruedas
+ * Reinicia el temporizador a cero
  */
 function resetTimer() {
-    stopTimer();
-    selectedH = 0; selectedM = 0; selectedS = 0;
-    setWheelValue('picker-hours', 0);
-    setWheelValue('picker-mins', 0);
-    setWheelValue('picker-secs', 0);
-    updateDigitalDisplay();
+    // Primero detenemos el intervalo
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
 
+    // Detener audio y limpiar notificaciones
+    if (typeof detenerAudio === 'function') detenerAudio();
+
+    // Resetear variables y pickers
+    selectedH = 0;
+    selectedM = 0;
+    selectedS = 0;
+    totalSeconds = 0;
+
+    const wheels = ['picker-hours', 'picker-mins', 'picker-secs'];
+    wheels.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    timerDisplay.style.color = "#26a69a";
+    updateDigitalDisplay();
 }
