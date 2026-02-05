@@ -1,3 +1,6 @@
+self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Fuerza al service worker nuevo a activarse de inmediato
+});
 const CACHE_NAME = 'daily-tools-v6'; // Subimos a v6 para forzar limpieza
 // Asegúrate de que el Service Worker use estas propiedades
 // Ejemplo de lo que debería ir en el Service Worker para la notificación
@@ -63,5 +66,6 @@ self.addEventListener('fetch', event => {
     })
   );
 });
+
 
 
