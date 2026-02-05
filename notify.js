@@ -1,6 +1,5 @@
 /**
  * SERVICIO GLOBAL DE NOTIFICACIONES Y AUDIO - Daily Tools
- * notify.js (Versión Sincronizada con Settings.js)
  */
 
 const globalAudio = new Audio();
@@ -16,7 +15,7 @@ async function initNotifications() {
         globalAudio.play().then(() => {
             globalAudio.pause();
             globalAudio.muted = false;
-        }).catch(err => console.error("ERROR CRÍTICO DE AUDIO:", err));
+        }).catch(e => console.log("Esperando interacción..."));
         document.removeEventListener('click', unlockAudio);
         document.removeEventListener('touchstart', unlockAudio);
     };
@@ -29,7 +28,6 @@ function detenerAudio() {
     globalAudio.pause();
     globalAudio.currentTime = 0;
     globalAudio.loop = false;
-    // Cerramos los Toasts de Materialize
     if (typeof M !== 'undefined') {
         const toasts = document.querySelectorAll('.toast');
         toasts.forEach(t => {
@@ -40,73 +38,51 @@ function detenerAudio() {
 }
 
 function notify(titleKey, textKey, module = "pomodoro") {
-    // 1. OBTENER TRADUCCIONES (Sincronizado con getTxt de settings.js)
     const lang = localStorage.getItem('lang') || 'es';
     const translations = window.i18n || {}; 
     let title = (translations[lang] && translations[lang][titleKey]) ? translations[lang][titleKey] : titleKey;
     let text = (translations[lang] && translations[lang][textKey]) ? translations[lang][textKey] : textKey;
 
-    // 2. LOGICA DE AUDIO (Copiada exactamente de saveModuleRingtone en settings.js)
+    // AUDIO - Sincronizado con settings.js
     try {
         const filename = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
-        let source;
-        
-        if (filename === "CUSTOM_FILE") {
-            source = localStorage.getItem(`custom_audio_${module}`);
-        } else {
-            source = `assets/ringtones/${filename}`;
-        }
+        let source = (filename === "CUSTOM_FILE") 
+            ? localStorage.getItem(`custom_audio_${module}`) 
+            : `assets/ringtones/${filename}`;
 
         if (source) {
-            globalAudio.pause();
             globalAudio.src = source;
-            globalAudio.loop = true; // Para que la alarma no pare hasta que el usuario le de a OK
+            globalAudio.loop = true;
             globalAudio.volume = 1.0;
-            globalAudio.play().catch(err => {
-                console.warn("Reintentando audio en 1s por bloqueo de navegador...");
-                setTimeout(() => globalAudio.play(), 1000);
-            });
+            // Un pequeño delay de 100ms para evitar el conflicto con el reset de los timers
+            setTimeout(() => {
+                globalAudio.play()
+                    .then(() => console.log("Audio sonando..."))
+                    .catch(e => console.error("Error play:", e));
+            }, 100);
         }
-    } catch (e) { console.error("Error cargando audio:", e); }
+    } catch (e) { console.error("Error Audio:", e); }
 
-    // 3. VENTANA INTERNA PERSISTENTE (Híbrida)
+    // NOTIFICACIÓN INTERNA (Materialize)
     if (typeof M !== 'undefined') {
         const btnText = (translations[lang] && translations[lang]['btn_stop']) ? translations[lang]['btn_stop'] : 'OK';
-        const toastHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                <span><b>${title}</b><br>${text}</span>
-                <button class="btn-flat toast-action" onclick="detenerAudio()" style="color:#ffeb3b; font-weight:bold; margin-left:10px; border:1px solid #ffeb3b; border-radius:4px;">${btnText}</button>
-            </div>
-        `;
         M.toast({
-            html: toastHTML, 
-            displayLength: 300000, // 5 minutos (Persistente)
-            classes: 'rounded pulse'
+            html: `<span><b>${title}</b><br>${text}</span><button class="btn-flat toast-action" onclick="detenerAudio()" style="color:#ffeb3b; font-weight:bold; margin-left:10px;">${btnText}</button>`,
+            displayLength: 150000,
+            classes: 'rounded'
         });
     }
 
-    // 4. VIBRACIÓN
-    if (localStorage.getItem('vibration') === 'true' && navigator.vibrate) {
-        navigator.vibrate([500, 200, 500, 200, 500]);
-    }
-
-    // 5. NOTIFICACIÓN EXTERNA (Sistema Operativo)
-    const options = { 
-        body: text, 
-        icon: 'assets/splash.png', 
-        badge: 'assets/splash.png',
-        tag: 'dailytools-alert',
-        renotify: true,
-        requireInteraction: true,
-        data: { url: window.location.href }
-    };
-
-    if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-        navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification(title, options);
+    // NOTIFICACIÓN EXTERNA
+    if (Notification.permission === 'granted') {
+        navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification(title, {
+                body: text,
+                icon: 'assets/splash.png',
+                tag: 'dailytools-alert',
+                renotify: true,
+                requireInteraction: true
+            });
         });
-    } else if (window.Notification && Notification.permission === 'granted') {
-        new Notification(title, options);
     }
 }
-
