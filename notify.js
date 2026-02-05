@@ -1,6 +1,6 @@
 /**
  * SERVICIO GLOBAL DE NOTIFICACIONES Y AUDIO - Daily Tools
- * notify.js (Versión Profesional - Notificación Persistente)
+ * notify.js (Versión Sincronizada con Settings.js)
  */
 
 const globalAudio = new Audio();
@@ -25,20 +25,11 @@ async function initNotifications() {
 }
 initNotifications();
 
-function mantenerAudioActivo() {
-    try {
-        globalAudio.src = SILENCE_TRACK;
-        globalAudio.loop = true; 
-        globalAudio.volume = 0;  
-        globalAudio.play();
-    } catch(e) {}
-}
-
 function detenerAudio() {
     globalAudio.pause();
+    globalAudio.currentTime = 0;
     globalAudio.loop = false;
-    globalAudio.volume = 1; 
-    // Al detener, quitamos los Toasts activos
+    // Cerramos los Toasts de Materialize
     if (typeof M !== 'undefined') {
         const toasts = document.querySelectorAll('.toast');
         toasts.forEach(t => {
@@ -49,53 +40,57 @@ function detenerAudio() {
 }
 
 function notify(titleKey, textKey, module = "pomodoro") {
+    // 1. OBTENER TRADUCCIONES (Sincronizado con getTxt de settings.js)
     const lang = localStorage.getItem('lang') || 'es';
-    const translations = window.i18n || i18n; 
-    let title = (translations && translations[lang]) ? (translations[lang][titleKey] || titleKey) : titleKey;
-    let text = (translations && translations[lang]) ? (translations[lang][textKey] || textKey) : textKey;
+    const translations = window.i18n || {}; 
+    let title = (translations[lang] && translations[lang][titleKey]) ? translations[lang][titleKey] : titleKey;
+    let text = (translations[lang] && translations[lang][textKey]) ? translations[lang][textKey] : textKey;
 
-    // 1. REPRODUCCIÓN DE AUDIO (Forzada)
+    // 2. LOGICA DE AUDIO (Copiada exactamente de saveModuleRingtone en settings.js)
     try {
-        const saved = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
-        let audioSource = (saved === "CUSTOM_FILE") 
-            ? localStorage.getItem(`custom_audio_${module}`) 
-            : `assets/ringtones/${saved}`;
+        const filename = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
+        let source;
         
-        if (audioSource) {
-            globalAudio.pause(); // Reset por si acaso
-            globalAudio.src = audioSource;
-            globalAudio.loop = false;
+        if (filename === "CUSTOM_FILE") {
+            source = localStorage.getItem(`custom_audio_${module}`);
+        } else {
+            source = `assets/ringtones/${filename}`;
+        }
+
+        if (source) {
+            globalAudio.pause();
+            globalAudio.src = source;
+            globalAudio.loop = true; // Para que la alarma no pare hasta que el usuario le de a OK
             globalAudio.volume = 1.0;
             globalAudio.play().catch(err => {
-                console.warn("Audio bloqueado, intentando de nuevo en 1s...");
+                console.warn("Reintentando audio en 1s por bloqueo de navegador...");
                 setTimeout(() => globalAudio.play(), 1000);
             });
         }
-    } catch (e) { console.error("Error en Audio:", e); }
+    } catch (e) { console.error("Error cargando audio:", e); }
 
-    // 2. VENTANA INTERNA (Persistente hasta click)
+    // 3. VENTANA INTERNA PERSISTENTE (Híbrida)
     if (typeof M !== 'undefined') {
-        // Creamos un toast que dura mucho tiempo (casi fijo)
-        // Añadimos un botón de cerrar para que sea profesional
+        const btnText = (translations[lang] && translations[lang]['btn_stop']) ? translations[lang]['btn_stop'] : 'OK';
         const toastHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                 <span><b>${title}</b><br>${text}</span>
-                <button class="btn-flat toast-action" onclick="detenerAudio()" style="color:#ffeb3b; font-weight:bold; margin-left:10px;">OK</button>
+                <button class="btn-flat toast-action" onclick="detenerAudio()" style="color:#ffeb3b; font-weight:bold; margin-left:10px; border:1px solid #ffeb3b; border-radius:4px;">${btnText}</button>
             </div>
         `;
         M.toast({
             html: toastHTML, 
-            displayLength: 150000, // 2.5 minutos
-            classes: 'rounded alert-toast'
+            displayLength: 300000, // 5 minutos (Persistente)
+            classes: 'rounded pulse'
         });
     }
 
-    // 3. VIBRACIÓN
+    // 4. VIBRACIÓN
     if (localStorage.getItem('vibration') === 'true' && navigator.vibrate) {
-        navigator.vibrate([500, 200, 500]);
+        navigator.vibrate([500, 200, 500, 200, 500]);
     }
 
-    // 4. NOTIFICACIÓN EXTERNA
+    // 5. NOTIFICACIÓN EXTERNA (Sistema Operativo)
     const options = { 
         body: text, 
         icon: 'assets/splash.png', 
