@@ -164,7 +164,7 @@ function startTimer() {
                 if (typeof notify === "function") {
                     notify("timer_notif_title", "timer_notif_ended", "timer");
                 }
-            }, 100);
+            }, 300);
 
             return;
         }
@@ -212,4 +212,5 @@ function resetTimer() {
     timerDisplay.style.color = "#26a69a";
     updateDigitalDisplay();
 }
+
 
