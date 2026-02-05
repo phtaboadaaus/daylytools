@@ -139,6 +139,7 @@ function startTimer() {
 
     // Si después de calcular sigue en 0, entonces sí avisamos
     if (totalSeconds <= 0) {
+		const lang = localStorage.getItem('lang') || 'es';
 		const msg = (window.i18n && i18n[lang] && i18n[lang]['timer_set_time']) 
                     ? i18n[lang]['timer_set_time'] : 'Toca el reloj para ajustar';
         M.toast({ html:msg});
@@ -214,6 +215,7 @@ function resetTimer() {
     timerDisplay.style.color = "#26a69a";
     updateDigitalDisplay();
 }
+
 
 
 
