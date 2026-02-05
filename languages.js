@@ -1,5 +1,7 @@
 const i18n = {
     es: {
+		install_desc: "Instala la app para usarla offline",
+        btn_install: "Instalar",
         nav_pomodoro: "Pomodoro",
         nav_timer: "Temporizador",
         nav_counter: "Contadores",
@@ -96,6 +98,8 @@ const i18n = {
 		
 		},
     en: {
+		install_desc: "Install the app to use it offline",
+        btn_install: "Install",
         nav_pomodoro: "Pomodoro",
         nav_timer: "Timer",
         nav_counter: "Counters",
@@ -191,6 +195,8 @@ const i18n = {
         privacy_text: "Daily Tools version 1.0.0. Your privacy is our absolute priority.\n\n1. LOCAL DATA: All your notes, tasks, and settings are stored exclusively in your device's internal memory. We do not have access to your personal information nor do we send it to external servers.\n\n2. ADVERTISING (Google AdMob): To keep the app free, we use Google's AdMob service. This service may collect unique advertising identifiers to show personalized ads. You can disable this by purchasing the Premium version.\n\n3. PAYMENTS (Google Play Store): Payments are managed directly through Google Play Billing Service. Daily Tools does NOT collect or store banking data.\n\n4. PERMISSIONS: The app requires vibration and notification permissions for alarms to work correctly.\n\nBy using this app, you agree to these terms."
     },
     it: {
+		install_desc: "Installa l'app per usarla offline",
+        btn_install: "Installa",
         nav_pomodoro: "Pomodoro",
         nav_timer: "Timer",
         nav_counter: "Contatori",
@@ -270,6 +276,8 @@ const i18n = {
 		privacy_text: "Daily Tools 1.0.0\n\nLa tua privacy è la nostra priorità. Questa app è progettata per funzionare interamente in locale. Non raccogliamo, memorizziamo o condividiamo i tuoi dati personali, attività o note su server esterni. Tutto rimane memorizzato sul tuo dispositivo."
     },
     fr: {
+		install_desc: "Installez l'app pour l'utiliser hors ligne",
+        btn_install: "Installer",
         nav_pomodoro: "Pomodoro",
         nav_timer: "Minuteur",
         nav_counter: "Compteurs",
@@ -349,6 +357,8 @@ const i18n = {
 		privacy_text: "Daily Tools 1.0.0\n\nVotre vie privée est notre priorité. Cette application est conçue pour fonctionner entièrement localement. Nous ne collectons, ne stockons ni ne partageons vos données personnelles, tâches ou notes sur des serveurs externes. Tout reste sur votre appareil."
     },
     de: {
+		install_desc: "App installieren, um sie offline zu nutzen",
+        btn_install: "Installieren",
         nav_pomodoro: "Pomodoro",
         nav_timer: "Timer",
         nav_counter: "Zähler",
@@ -428,6 +438,8 @@ const i18n = {
 		privacy_text: "Daily Tools 1.0.0\n\nIhre Privatsphäre ist unsere Priorität. Diese App ist so konzipiert, dass sie vollständig lokal funktioniert. Wir sammeln, speichern oder teilen Ihre persönlichen Daten, Aufgaben oder Notizen nicht auf externen Servern."
     },
     pt: {
+		install_desc: "Instale o app para usar offline",
+        btn_install: "Instalar",
         nav_pomodoro: "Pomodoro",
         nav_timer: "Temporizador",
         nav_counter: "Contadores",
@@ -507,5 +519,6 @@ const i18n = {
 		privacy_text: "Daily Tools 1.0.0\n\nA sua privacidade é a nossa prioridade. Este aplicativo foi projetado para funcionar totalmente localmente. Não coletamos, armazenamos ou compartilhamos seus dados pessoais, tarefas ou notas em servidores externos."
     }
 };
+
 
 window.i18n = i18n;
