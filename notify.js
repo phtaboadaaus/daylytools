@@ -91,7 +91,7 @@ try {
         const toastHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                 <span><b>${title}</b><br>${text}</span>
-                <button class="btn-flat toast-action" onclick="detenerAudio()" style="color:#ffeb3b; font-weight:bold; margin-left:10px; border:1px solid #ffeb3b; border-radius:4px;">${btnText}</button>
+                <button class="btn-flat toast-action" onclick="detenerAudio()" style="color:#ffeb3b; font-weight:bold; margin-left:10px; margin-right:auto; border:1px solid #ffeb3b; border-radius:4px;">${btnText}</button>
             </div>`;
         M.toast({ html: toastHTML, displayLength: 150000, classes: 'rounded' });
     }
@@ -114,6 +114,7 @@ try {
         });
     }
 }
+
 
 
 
