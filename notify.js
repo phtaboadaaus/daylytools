@@ -1,6 +1,6 @@
 /**
  * SERVICIO GLOBAL DE NOTIFICACIONES Y AUDIO - Daily Tools
- * notify.js (Versión Final Blindada con Respaldo Interno)
+ * notify.js (Versión Final con Retardo de Audio)
  */
 
 const globalAudio = new Audio();
@@ -46,21 +46,23 @@ function notify(titleKey, textKey, module = "pomodoro") {
     let title = (translations && translations[lang]) ? (translations[lang][titleKey] || titleKey) : titleKey;
     let text = (translations && translations[lang]) ? (translations[lang][textKey] || textKey) : textKey;
 
-    // 1. INTENTO DE REPRODUCCIÓN DE AUDIO (No bloquea el resto)
-    try {
-        const saved = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
-        let audioSource = (saved === "CUSTOM_FILE") 
-            ? localStorage.getItem(`custom_audio_${module}`) 
-            : `assets/ringtones/${saved}`;
-        if (audioSource) {
-            globalAudio.src = audioSource;
-            globalAudio.loop = false;
-            globalAudio.volume = 1.0;
-            globalAudio.play().catch(err => console.warn("Audio bloqueado por el navegador"));
-        }
-    } catch (e) { console.error("Error en Audio:", e); }
+    // 1. LANZAMIENTO DE AUDIO CON RETARDO (Para evitar bloqueo del sistema)
+    setTimeout(() => {
+        try {
+            const saved = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
+            let audioSource = (saved === "CUSTOM_FILE") 
+                ? localStorage.getItem(`custom_audio_${module}`) 
+                : `assets/ringtones/${saved}`;
+            if (audioSource) {
+                globalAudio.src = audioSource;
+                globalAudio.loop = false;
+                globalAudio.volume = 1.0;
+                globalAudio.play().catch(err => console.warn("El navegador bloqueó el audio automático"));
+            }
+        } catch (e) { console.error("Error en Audio:", e); }
+    }, 500); // 500ms de espera para que la notificación externa no lo pise
 
-    // 2. VENTANA INTERNA (Aviso en pantalla inmediato)
+    // 2. VENTANA INTERNA (M.toast)
     if (typeof M !== 'undefined') {
         M.toast({html: `<div style="width:100%"><b>${title}</b><br>${text}</div>`, displayLength: 10000});
     }
@@ -70,7 +72,7 @@ function notify(titleKey, textKey, module = "pomodoro") {
         navigator.vibrate([500, 200, 500]);
     }
 
-    // 4. NOTIFICACIÓN EXTERNA (Con manejo de errores)
+    // 4. NOTIFICACIÓN EXTERNA
     const options = { 
         body: text, 
         icon: 'assets/splash.png', 
@@ -78,6 +80,7 @@ function notify(titleKey, textKey, module = "pomodoro") {
         tag: 'dailytools-alert',
         renotify: true,
         requireInteraction: true,
+        silent: false, // Dejamos que el sistema haga su sonido normal
         data: { url: window.location.href }
     };
 
