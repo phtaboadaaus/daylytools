@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar selects de configuración
     const langSelect = document.getElementById('lang-select');
     const firstModuleSelect = document.getElementById('first-module-select');
-    langSelect.value = localStorage.getItem('lang') || 'es';
+    langSelect.value = localStorage.getItem('lang') || 'ES';
     firstModuleSelect.value = localStorage.getItem('firstModule') || 'pomodoro';
     changeLanguage(langSelect.value);
 });
@@ -26,3 +26,4 @@ window.onload = () => {
     const start = localStorage.getItem('startModule') || 'pomodoro';
     showModule(start);
 };
+
