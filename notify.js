@@ -3,25 +3,20 @@
  */
 
 const globalAudio = new Audio();
-// Pista de silencio para mantener el canal abierto y evitar bloqueos
 const SILENCE_TRACK = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjIwLjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD//////////////////////////////////////////////////////////////////wAAAP5MYXZjNTguMzUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/7EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAvwAAAAEALAAAAAAABQAAgAAAAP/7EMQAA9wAAAAAAAABAAAAAA5UAICAAAAAAAAAAAAAAAAAAAAAA/+//xDDEAAAZ4AAAAAAAACAAAAAA5UAICAAAAAAAAAAAAAAAAAAAAAA//sQxDsAAOWAAAAAAAANAAAAAA5UAICAAAAAAAAAAAAAAAAAAAAAA//tQxH8AAO8AAAAAAAARAAAAAA5UAICAAAAAAAAAAAAAAAAAAAAAA';
-
 async function initNotifications() {
     if ("Notification" in window && Notification.permission === "default") {
         await Notification.requestPermission();
     }
     const unlockAudio = () => {
         globalAudio.src = SILENCE_TRACK;
-        globalAudio.muted = true;
         globalAudio.play().then(() => {
             globalAudio.pause();
-            globalAudio.muted = false;
-        }).catch(e => console.log("Esperando interacción para audio"));
+            console.log("🔊 Audio desbloqueado correctamente");
+        }).catch(() => console.log("Esperando interacción..."));
         document.removeEventListener('click', unlockAudio);
-        document.removeEventListener('touchstart', unlockAudio);
     };
     document.addEventListener('click', unlockAudio);
-    document.addEventListener('touchstart', unlockAudio);
 }
 initNotifications();
 
@@ -91,16 +86,16 @@ try {
 } catch (e) { console.error("Error en notify.js:", e); }
 
     // 3. Ventana Interna (Toast Persistente con botón OK)
-    if (typeof M !== 'undefined') {
+  if (typeof M !== 'undefined') {
         const btnText = (translations[lang] && translations[lang]['btn_stop']) ? translations[lang]['btn_stop'] : 'OK';
         const toastHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                 <span><b>${title}</b><br>${text}</span>
                 <button class="btn-flat toast-action" onclick="detenerAudio()" style="color:#ffeb3b; font-weight:bold; margin-left:10px; border:1px solid #ffeb3b; border-radius:4px;">${btnText}</button>
-            </div>
-        `;
+            </div>`;
         M.toast({ html: toastHTML, displayLength: 150000, classes: 'rounded' });
     }
+}
 
     // 4. Vibración
     if (localStorage.getItem('vibration') === 'true' && navigator.vibrate) {
@@ -120,6 +115,7 @@ try {
         });
     }
 }
+
 
 
 
