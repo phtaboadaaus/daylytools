@@ -3,6 +3,7 @@
  */
 
 const globalAudio = new Audio();
+// Pista de silencio para mantener el canal abierto y evitar bloqueos
 const SILENCE_TRACK = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjIwLjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD//////////////////////////////////////////////////////////////////wAAAP5MYXZjNTguMzUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/7EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAvwAAAAEALAAAAAAABQAAgAAAAP/7EMQAA9wAAAAAAAABAAAAAA5UAICAAAAAAAAAAAAAAAAAAAAAA/+//xDDEAAAZ4AAAAAAAACAAAAAA5UAICAAAAAAAAAAAAAAAAAAAAAA//sQxDsAAOWAAAAAAAANAAAAAA5UAICAAAAAAAAAAAAAAAAAAAAAA//tQxH8AAO8AAAAAAAARAAAAAA5UAICAAAAAAAAAAAAAAAAAAAAAA';
 
 async function initNotifications() {
@@ -15,7 +16,7 @@ async function initNotifications() {
         globalAudio.play().then(() => {
             globalAudio.pause();
             globalAudio.muted = false;
-        }).catch(e => console.log("Esperando interacción..."));
+        }).catch(e => console.log("Esperando interacción para audio"));
         document.removeEventListener('click', unlockAudio);
         document.removeEventListener('touchstart', unlockAudio);
     };
@@ -24,10 +25,20 @@ async function initNotifications() {
 }
 initNotifications();
 
+function mantenerAudioActivo() {
+    try {
+        globalAudio.src = SILENCE_TRACK;
+        globalAudio.loop = true; 
+        globalAudio.volume = 0;  
+        globalAudio.play();
+    } catch(e) {}
+}
+
 function detenerAudio() {
     globalAudio.pause();
     globalAudio.currentTime = 0;
     globalAudio.loop = false;
+    // Cerramos los Toasts visibles
     if (typeof M !== 'undefined') {
         const toasts = document.querySelectorAll('.toast');
         toasts.forEach(t => {
@@ -38,12 +49,13 @@ function detenerAudio() {
 }
 
 function notify(titleKey, textKey, module = "pomodoro") {
+    // 1. Traducciones (Sincronizado con languages.js/settings.js)
     const lang = localStorage.getItem('lang') || 'es';
     const translations = window.i18n || {}; 
     let title = (translations[lang] && translations[lang][titleKey]) ? translations[lang][titleKey] : titleKey;
     let text = (translations[lang] && translations[lang][textKey]) ? translations[lang][textKey] : textKey;
 
-    // AUDIO - Sincronizado con settings.js
+    // 2. Lógica de Audio (Soporte archivos locales y subidos)
     try {
         const filename = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
         let source = (filename === "CUSTOM_FILE") 
@@ -54,27 +66,32 @@ function notify(titleKey, textKey, module = "pomodoro") {
             globalAudio.src = source;
             globalAudio.loop = true;
             globalAudio.volume = 1.0;
-            // Un pequeño delay de 100ms para evitar el conflicto con el reset de los timers
+            // Retardo de seguridad para que no lo pise el reset del timer
             setTimeout(() => {
-                globalAudio.play()
-                    .then(() => console.log("Audio sonando..."))
-                    .catch(e => console.error("Error play:", e));
-            }, 100);
+                globalAudio.play().catch(e => console.warn("Reproducción bloqueada por navegador"));
+            }, 150);
         }
-    } catch (e) { console.error("Error Audio:", e); }
+    } catch (e) { console.error("Error cargando audio:", e); }
 
-    // NOTIFICACIÓN INTERNA (Materialize)
+    // 3. Ventana Interna (Toast Persistente con botón OK)
     if (typeof M !== 'undefined') {
         const btnText = (translations[lang] && translations[lang]['btn_stop']) ? translations[lang]['btn_stop'] : 'OK';
-        M.toast({
-            html: `<span><b>${title}</b><br>${text}</span><button class="btn-flat toast-action" onclick="detenerAudio()" style="color:#ffeb3b; font-weight:bold; margin-left:10px;">${btnText}</button>`,
-            displayLength: 150000,
-            classes: 'rounded'
-        });
+        const toastHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                <span><b>${title}</b><br>${text}</span>
+                <button class="btn-flat toast-action" onclick="detenerAudio()" style="color:#ffeb3b; font-weight:bold; margin-left:10px; border:1px solid #ffeb3b; border-radius:4px;">${btnText}</button>
+            </div>
+        `;
+        M.toast({ html: toastHTML, displayLength: 150000, classes: 'rounded' });
     }
 
-    // NOTIFICACIÓN EXTERNA
-    if (Notification.permission === 'granted') {
+    // 4. Vibración
+    if (localStorage.getItem('vibration') === 'true' && navigator.vibrate) {
+        navigator.vibrate([500, 200, 500]);
+    }
+
+    // 5. Notificación de Sistema
+    if ('serviceWorker' in navigator && Notification.permission === 'granted') {
         navigator.serviceWorker.ready.then(reg => {
             reg.showNotification(title, {
                 body: text,
