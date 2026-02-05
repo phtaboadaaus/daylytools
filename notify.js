@@ -83,8 +83,12 @@ function notify(titleKey, textKey, module = "pomodoro") {
         tag: 'dailytools-alert',
         renotify: true,
         requireInteraction: true,
+        silent: true, // EVITA EL DOBLE SONIDO (Usa solo el tuyo)
         vibrate: vibrationEnabled ? [200, 100, 200] : [],
-        data: { url: window.location.href }
+        data: { url: window.location.href },
+        actions: [
+            { action: 'close', title: 'Entendido' }
+        ]
     };
 
     // D. LANZAMIENTO
