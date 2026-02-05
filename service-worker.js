@@ -1,11 +1,10 @@
-const CACHE_NAME = 'daily-tools-v3'; // Nueva versión para forzar actualización
+const CACHE_NAME = 'daily-tools-v4';
 
 const ASSETS = [
   './',
   'index.html',
   'styles.css',
   'manifest.json',
-  // JS
   'calculator.js',
   'checklist.js',
   'counters.js',
@@ -17,68 +16,43 @@ const ASSETS = [
   'reminders.js',
   'settings.js',
   'timers.js',
-  // Assets
   'assets/splash.png',
-  // Ringtones
   'assets/ringtones/eurythmic.mp3',
   'assets/ringtones/ringtone.mp3',
   'assets/ringtones/ringtone30s.mp3',
   'assets/ringtones/twinkle_light.mp3'
 ];
 
-// Instalación y almacenamiento en caché
 self.addEventListener('install', event => {
-  self.skipWaiting(); // Obliga al nuevo SW a tomar el control
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      console.log('Cacheando archivos...');
-      return cache.addAll(ASSETS);
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
 });
 
-// Limpieza de cachés antiguas
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            console.log('Borrando caché antigua:', cache);
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
+    caches.keys().then(keys => Promise.all(
+      keys.map(key => key !== CACHE_NAME ? caches.delete(key) : null)
+    ))
   );
-  return self.clients.claim(); // Toma el control de las pestañas abiertas inmediatamente
+  return self.clients.claim();
 });
 
-// Estrategia de respuesta
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
+    caches.match(event.request).then(response => response || fetch(event.request))
   );
 });
 
-// Gestión de clics en la notificación
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', event => {
   event.notification.close();
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-      // Intentar enfocar la app si ya está abierta
-      for (let i = 0; i < clientList.length; i++) {
-        let client = clientList[i];
-        if ('focus' in client) {
-          return client.focus();
-        }
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (let client of clientList) {
+        if ('focus' in client) return client.focus();
       }
-      // Si no hay ninguna ventana abierta, abrir la app
-      if (clients.openWindow) {
-        return clients.openWindow('./');
-      }
+      if (clients.openWindow) return clients.openWindow('./');
     })
   );
 });
