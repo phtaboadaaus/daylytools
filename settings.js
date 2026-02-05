@@ -251,9 +251,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const savedTheme = localStorage.getItem('theme') || 'light';
     changeTheme(savedTheme);
-    const themeSelect = document.getElementById('theme-select');
-    if(themeSelect) themeSelect.value = savedTheme;
-
+    /*const themeSelect = document.getElementById('theme-select');
+    if(themeSelect) themeSelect.value = savedTheme;*/
+    
+    // Sincronizamos el switch visualmente
+    const themeSwitch = document.getElementById('theme-switch');
+    if (themeSwitch) {
+        themeSwitch.checked = (savedTheme === 'dark');
+    }
     // B. Vibración
     const vibEnabled = localStorage.getItem('vibration') === 'true';
     const vibSwitch = document.getElementById('vibration-switch');
@@ -278,6 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
     checkPremiumStatus();
 
 });
+
 
 
 
