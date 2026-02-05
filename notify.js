@@ -56,32 +56,39 @@ function notify(titleKey, textKey, module = "pomodoro") {
     let text = (translations[lang] && translations[lang][textKey]) ? translations[lang][textKey] : textKey;
 
     // 2. Lógica de Audio (Soporte archivos locales y subidos)
-// 2. Lógica de Audio
-    try {
-        const filename = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
+// Busca el bloque de Lógica de Audio en notify.js y reemplázalo por este:
+try {
+    const filename = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
+    let source;
+    
+    if (filename === "CUSTOM_FILE") {
+        source = localStorage.getItem(`custom_audio_${module}`);
+    } else {
+        // Usamos ruta relativa directa, es lo más compatible con Service Workers
+        source = `assets/ringtones/${filename}`;
+    }
+
+    if (source) {
+        console.log("🔊 Preparando audio:", source);
         
-        // Obtenemos la base de la URL (ej: https://phtaboadaaus.github.io/daylytools/)
-        const pathArray = window.location.pathname.split('/');
-        pathArray.pop(); // Quitamos "index.html"
-        const baseDir = pathArray.join('/');
-        const fullUrl = `${window.location.origin}${baseDir}/assets/ringtones/${filename}`;
+        globalAudio.pause();
+        globalAudio.src = source;
+        globalAudio.loop = true;
+        globalAudio.volume = 1.0;
+        globalAudio.load(); 
 
-        if (fullUrl) {
-            console.log("🔊 Ruta final generada:", fullUrl);
-            
-            globalAudio.pause();
-            globalAudio.src = fullUrl;
-            globalAudio.loop = true;
-            globalAudio.volume = 1.0;
-            globalAudio.load(); 
-
-            setTimeout(() => {
-                globalAudio.play()
-                    .then(() => console.log("✅ Sonando físicamente"))
-                    .catch(e => console.error("❌ Bloqueo de reproducción:", e));
-            }, 250);
-        }
-    } catch (e) { console.error("Error en notify.js:", e); }
+        // Delay de 1 segundo para no chocar con el sonido de la notificación del sistema
+        setTimeout(() => {
+            globalAudio.play()
+                .then(() => console.log("✅ ¡REPRODUCCIÓN INICIADA!"))
+                .catch(e => {
+                    console.error("❌ Error de reproducción física:", e);
+                    // Re-intento si fue bloqueado
+                    document.addEventListener('click', () => globalAudio.play(), {once:true});
+                });
+        }, 1000); 
+    }
+} catch (e) { console.error("Error en notify.js:", e); }
 
     // 3. Ventana Interna (Toast Persistente con botón OK)
     if (typeof M !== 'undefined') {
@@ -113,6 +120,7 @@ function notify(titleKey, textKey, module = "pomodoro") {
         });
     }
 }
+
 
 
 
