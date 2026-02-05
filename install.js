@@ -12,10 +12,15 @@ const isAppStandalone = window.matchMedia('(display-mode: standalone)').matches 
 if (!isAppStandalone) {
     // Escuchar evento para Android / Chrome en PC
     window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        if (installBanner) installBanner.style.display = 'block';
-    });
+    console.log('✅ Evento beforeinstallprompt capturado');
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    // Forzamos que se muestre el banner
+    if (installBanner) {
+        installBanner.style.setProperty('display', 'block', 'important');
+    }
+});
 
     // Detectar iOS de forma más precisa
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
