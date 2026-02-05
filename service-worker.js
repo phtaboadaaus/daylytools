@@ -1,18 +1,46 @@
-self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Fuerza al service worker nuevo a activarse de inmediato
-});
 const CACHE_NAME = 'daily-tools-v6'; // Subimos a v6 para forzar limpieza
-// Asegúrate de que el Service Worker use estas propiedades
-// Ejemplo de lo que debería ir en el Service Worker para la notificación
-self.registration.showNotification(title, {
-    body: text,
-    icon: 'assets/favicon-32x32.png',
-    badge: 'assets/favicon-16x16.png',
-    vibrate: [200, 100, 200, 100, 200], // Esto intenta forzar la vibración del sistema
-    tag: 'alarm-notification',
-    renotify: true,
-    requireInteraction: true // Mantiene la notificación hasta que el usuario la toque
+// 1. Forzar activación inmediata
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
 });
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(clients.claim());
+});
+
+// 2. Escuchar mensajes desde la App (timers.js, notify.js, etc.)
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+        const { title, text } = event.data;
+
+        const options = {
+            body: text,
+            icon: 'assets/favicon-32x32.png',
+            badge: 'assets/favicon-16x16.png',
+            vibrate: [200, 100, 200, 100, 200],
+            tag: 'alarm-notification',
+            renotify: true,
+            requireInteraction: true,
+            data: { url: self.location.origin } // Para abrir la app al tocar
+        };
+
+        event.waitUntil(
+            self.registration.showNotification(title, options)
+        );
+    }
+});
+
+// 3. Qué hacer cuando el usuario toca la notificación
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    event.waitUntil(
+        clients.matchAll({ type: 'window' }).then((clientList) => {
+            if (clientList.length > 0) return clientList[0].focus();
+            return clients.openWindow('./');
+        })
+    );
+});
+
 const ASSETS = [
   './',
   'index.html',
