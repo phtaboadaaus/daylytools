@@ -1,5 +1,5 @@
 {
-  "id": "/daily-tools-pwa",
+  "id": "daily-tools-app",
   "name": "Daily Tools",
   "short_name": "DailyTools",
   "start_url": "index.html",
@@ -25,4 +25,5 @@
     }
   ]
 }
+
 
