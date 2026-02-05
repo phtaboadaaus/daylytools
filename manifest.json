@@ -1,18 +1,26 @@
 {
   "name": "Daily Tools",
   "short_name": "DailyTools",
-  "start_url": "/",
+  "start_url": "index.html",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone"],
   "background_color": "#121212",
-  "theme_color": "#121212",
+  "theme_color": "#26a69a",
   "orientation": "portrait",
+  "categories": ["productivity", "utilities"],
+  "description": "Herramientas diarias: Pomodoro, Temporizador, Notas y más.",
   "icons": [
     {
-      "src": "/assets/splash.png",
+      "src": "assets/splash.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/splash.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
