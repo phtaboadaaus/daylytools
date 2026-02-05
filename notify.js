@@ -56,7 +56,7 @@ function notify(titleKey, textKey, module = "pomodoro") {
     let text = (translations[lang] && translations[lang][textKey]) ? translations[lang][textKey] : textKey;
 
     // 2. Lógica de Audio (Soporte archivos locales y subidos)
-   // 2. Lógica de Audio
+// 2. Lógica de Audio
     try {
         const filename = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
         let source;
@@ -64,33 +64,31 @@ function notify(titleKey, textKey, module = "pomodoro") {
         if (filename === "CUSTOM_FILE") {
             source = localStorage.getItem(`custom_audio_${module}`);
         } else {
-            // USAMOS RUTA RELATIVA A LA RAÍZ (sin el punto inicial)
-            // Esto es lo más compatible para GitHub Pages
+            // Usamos la ruta más simple posible
             source = `assets/ringtones/${filename}`;
         }
 
         if (source) {
-            console.log("Intentando cargar:", source);
+            console.log("Intentando reproducir:", source);
             
             globalAudio.pause();
             globalAudio.src = source;
             globalAudio.loop = true;
             globalAudio.volume = 1.0;
 
-            // IMPORTANTE: Forzamos la carga antes de intentar reproducir
+            // IMPORTANTE: Forzamos el reset del motor de audio
             globalAudio.load(); 
 
             setTimeout(() => {
-                globalAudio.play().then(() => {
-                    console.log("✅ ¡SONANDO!");
-                }).catch(e => {
-                    console.error("❌ Error de reproducción:", e);
-                    // Si falla por la ruta, intentamos un último recurso:
-                    if (!source.startsWith('data:')) {
-                        globalAudio.src = 'ringtone.mp3'; // Intento desesperado si está en la raíz
-                        globalAudio.play().catch(() => {});
-                    }
-                });
+                const playPromise = globalAudio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log("✅ El navegador confirma reproducción de:", source);
+                    }).catch(e => {
+                        console.error("❌ Error de reproducción física:", e);
+                        // Si falla, es que el archivo assets/ringtones/ringtone.mp3 NO EXISTE realmente
+                    });
+                }
             }, 200);
         }
     } catch (e) { console.error("Error crítico notify.js:", e); }
@@ -125,6 +123,7 @@ function notify(titleKey, textKey, module = "pomodoro") {
         });
     }
 }
+
 
 
 
