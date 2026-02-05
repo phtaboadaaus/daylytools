@@ -13,6 +13,17 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <link rel="stylesheet" href="styles.css">
+<script src="install.js"></script> ```
+
+### 3. Comprobación del Banner (HTML)
+Asegúrate de que en tu `index.html` el banner tenga exactamente estos IDs para que el JS los encuentre:
+
+```html
+<div id="pwa-install-banner" style="display:none; position:fixed; bottom:20px; left:20px; right:20px; z-index:999; background:#333; color:white; padding:15px; border-radius:10px;">
+  <span>¿Quieres instalar Daily Tools en tu dispositivo?</span>
+  <button id="btn-install-pwa" class="btn teal" style="margin-left:10px;">Instalar</button>
+  <button onclick="hideInstallBanner()" class="btn-flat white-text">Ahora no</button>
+</div>
 </head>
 <body>
 
@@ -438,5 +449,6 @@
 </body>
 
 </html>
+
 
 
