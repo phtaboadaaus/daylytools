@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daily-tools-v5'; // Subimos a v5 para limpiar errores previos
+const CACHE_NAME = 'daily-tools-v6'; // Subimos a v6 para forzar limpieza
 
 const ASSETS = [
   './',
@@ -19,24 +19,21 @@ const ASSETS = [
   'assets/splash.png'
 ];
 
-// 1. Instalación rápida
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      console.log('Instalando caché v5...');
+      console.log('Instalando caché v6 (sin audios para evitar bloqueos)...');
       return cache.addAll(ASSETS);
     })
   );
 });
 
-// 2. Activación y limpieza profunda
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
       keys.map(key => {
         if (key !== CACHE_NAME) {
-          console.log('Borrando caché antigua:', key);
           return caches.delete(key);
         }
       })
@@ -45,27 +42,14 @@ self.addEventListener('activate', event => {
   return self.clients.claim();
 });
 
-// 3. Estrategia Network-First para asegurar que el audio y JS se actualicen
+// Estrategia: Los audios (.mp3) SIEMPRE van por red, el resto por cache
 self.addEventListener('fetch', event => {
+  if (event.request.url.endsWith('.mp3')) {
+    return event.respondWith(fetch(event.request));
+  }
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
     })
   );
 });
-
-// 4. Gestión de clics profesional
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  
-  // Si el usuario hace clic, intentamos traer la app al frente
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
-      for (let client of clientList) {
-        if ('focus' in client) return client.focus();
-      }
-      if (clients.openWindow) return clients.openWindow('./');
-    })
-  );
-});
-
