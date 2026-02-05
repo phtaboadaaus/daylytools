@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.phtaboadaaus.twa",
+        "sha256_cert_fingerprints": ["03:FD:5C:B9:83:D5:C1:18:B7:7A:18:0F:E0:09:DD:02:20:A2:57:D1:B8:10:1D:5D:F2:E3:EA:24:EA:2A:C2:BB"]
+      }
+    }]
