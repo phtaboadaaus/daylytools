@@ -1,6 +1,6 @@
 /**
  * SERVICIO GLOBAL DE NOTIFICACIONES Y AUDIO - Daily Tools
- * notify.js (Versión Final con Retardo de Audio)
+ * notify.js (Versión Profesional - Notificación Persistente)
  */
 
 const globalAudio = new Audio();
@@ -38,6 +38,14 @@ function detenerAudio() {
     globalAudio.pause();
     globalAudio.loop = false;
     globalAudio.volume = 1; 
+    // Al detener, quitamos los Toasts activos
+    if (typeof M !== 'undefined') {
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(t => {
+            const instance = M.Toast.getInstance(t);
+            if (instance) instance.dismiss();
+        });
+    }
 }
 
 function notify(titleKey, textKey, module = "pomodoro") {
@@ -46,25 +54,40 @@ function notify(titleKey, textKey, module = "pomodoro") {
     let title = (translations && translations[lang]) ? (translations[lang][titleKey] || titleKey) : titleKey;
     let text = (translations && translations[lang]) ? (translations[lang][textKey] || textKey) : textKey;
 
-    // 1. LANZAMIENTO DE AUDIO CON RETARDO (Para evitar bloqueo del sistema)
-    setTimeout(() => {
-        try {
-            const saved = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
-            let audioSource = (saved === "CUSTOM_FILE") 
-                ? localStorage.getItem(`custom_audio_${module}`) 
-                : `assets/ringtones/${saved}`;
-            if (audioSource) {
-                globalAudio.src = audioSource;
-                globalAudio.loop = false;
-                globalAudio.volume = 1.0;
-                globalAudio.play().catch(err => console.warn("El navegador bloqueó el audio automático"));
-            }
-        } catch (e) { console.error("Error en Audio:", e); }
-    }, 500); // 500ms de espera para que la notificación externa no lo pise
+    // 1. REPRODUCCIÓN DE AUDIO (Forzada)
+    try {
+        const saved = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
+        let audioSource = (saved === "CUSTOM_FILE") 
+            ? localStorage.getItem(`custom_audio_${module}`) 
+            : `assets/ringtones/${saved}`;
+        
+        if (audioSource) {
+            globalAudio.pause(); // Reset por si acaso
+            globalAudio.src = audioSource;
+            globalAudio.loop = false;
+            globalAudio.volume = 1.0;
+            globalAudio.play().catch(err => {
+                console.warn("Audio bloqueado, intentando de nuevo en 1s...");
+                setTimeout(() => globalAudio.play(), 1000);
+            });
+        }
+    } catch (e) { console.error("Error en Audio:", e); }
 
-    // 2. VENTANA INTERNA (M.toast)
+    // 2. VENTANA INTERNA (Persistente hasta click)
     if (typeof M !== 'undefined') {
-        M.toast({html: `<div style="width:100%"><b>${title}</b><br>${text}</div>`, displayLength: 10000});
+        // Creamos un toast que dura mucho tiempo (casi fijo)
+        // Añadimos un botón de cerrar para que sea profesional
+        const toastHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                <span><b>${title}</b><br>${text}</span>
+                <button class="btn-flat toast-action" onclick="detenerAudio()" style="color:#ffeb3b; font-weight:bold; margin-left:10px;">OK</button>
+            </div>
+        `;
+        M.toast({
+            html: toastHTML, 
+            displayLength: 150000, // 2.5 minutos
+            classes: 'rounded alert-toast'
+        });
     }
 
     // 3. VIBRACIÓN
@@ -80,15 +103,12 @@ function notify(titleKey, textKey, module = "pomodoro") {
         tag: 'dailytools-alert',
         renotify: true,
         requireInteraction: true,
-        silent: false, // Dejamos que el sistema haga su sonido normal
         data: { url: window.location.href }
     };
 
     if ('serviceWorker' in navigator && Notification.permission === 'granted') {
         navigator.serviceWorker.ready.then(registration => {
             registration.showNotification(title, options);
-        }).catch(err => {
-            new Notification(title, options);
         });
     } else if (window.Notification && Notification.permission === 'granted') {
         new Notification(title, options);
