@@ -1,9 +1,14 @@
 const CACHE_NAME = 'daily-tools-v6'; // Subimos a v6 para forzar limpieza
 // Asegúrate de que el Service Worker use estas propiedades
+// Ejemplo de lo que debería ir en el Service Worker para la notificación
 self.registration.showNotification(title, {
     body: text,
-    icon: 'assets/favicon-32x32.png', // Este es el icono que verás DENTRO de la notificación
-    badge: 'assets/favicon-16x16.png'  // Este es el icono pequeño que aparece arriba en la barra
+    icon: 'assets/favicon-32x32.png',
+    badge: 'assets/favicon-16x16.png',
+    vibrate: [200, 100, 200, 100, 200], // Esto intenta forzar la vibración del sistema
+    tag: 'alarm-notification',
+    renotify: true,
+    requireInteraction: true // Mantiene la notificación hasta que el usuario la toque
 });
 const ASSETS = [
   './',
@@ -58,4 +63,5 @@ self.addEventListener('fetch', event => {
     })
   );
 });
+
 
