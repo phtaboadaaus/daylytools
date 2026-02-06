@@ -9,6 +9,8 @@ self.addEventListener('activate', (event) => {
 });
 
 // 2. Escuchar mensajes desde la App (timers.js, notify.js, etc.)
+// service-worker.js
+
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
         const { title, text } = event.data;
@@ -17,11 +19,13 @@ self.addEventListener('message', (event) => {
             body: text,
             icon: 'assets/favicon-32x32.png',
             badge: 'assets/favicon-16x16.png',
-            vibrate: [200, 100, 200, 100, 200],
+            // Patrón de vibración largo: vibra 1s, para 0.5s, vibra 2s...
+            vibrate: [1000, 500, 2000, 500, 1000], 
             tag: 'alarm-notification',
             renotify: true,
-            requireInteraction: true,
-            data: { url: self.location.origin } // Para abrir la app al tocar
+            requireInteraction: true, // No desaparece hasta que el usuario la toque
+            priority: 2, // Prioridad alta para Android
+            data: { url: self.location.origin }
         };
 
         event.waitUntil(
@@ -94,6 +98,7 @@ self.addEventListener('fetch', event => {
     })
   );
 });
+
 
 
 
