@@ -9,8 +9,6 @@ self.addEventListener('activate', (event) => {
 });
 
 // 2. Escuchar mensajes desde la App (timers.js, notify.js, etc.)
-// service-worker.js
-
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
         const { title, text } = event.data;
@@ -19,16 +17,11 @@ self.addEventListener('message', (event) => {
             body: text,
             icon: 'assets/favicon-32x32.png',
             badge: 'assets/favicon-16x16.png',
-            // Patrón de vibración largo: vibra 1s, para 0.5s, vibra 2s...
-            vibrate: [1000, 500, 2000, 500, 1000], 
+            vibrate: [200, 100, 200, 100, 200],
             tag: 'alarm-notification',
             renotify: true,
-            requireInteraction: true, // No desaparece hasta que el usuario la toque
-            priority: 2, // Prioridad alta para Android
-            data: { url: self.location.origin }
-            actions: [
-                    { action: 'stop', title: 'DETENER ALARMA' }
-                    ]
+            requireInteraction: true,
+            data: { url: self.location.origin } // Para abrir la app al tocar
         };
 
         event.waitUntil(
@@ -39,13 +32,7 @@ self.addEventListener('message', (event) => {
 
 // 3. Qué hacer cuando el usuario toca la notificación
 self.addEventListener('notificationclick', (event) => {
-    event.notification.close(); // Cierra la notificación
-
-    if (event.action === 'stop') {
-        // Aquí podrías enviar un mensaje de vuelta a la app para parar el audio
-        console.log('El usuario detuvo la alarma desde la notificación');
-    }
-
+    event.notification.close();
     event.waitUntil(
         clients.matchAll({ type: 'window' }).then((clientList) => {
             if (clientList.length > 0) return clientList[0].focus();
@@ -107,8 +94,6 @@ self.addEventListener('fetch', event => {
     })
   );
 });
-
-
 
 
 
