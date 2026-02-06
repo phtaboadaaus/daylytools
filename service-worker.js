@@ -26,6 +26,9 @@ self.addEventListener('message', (event) => {
             requireInteraction: true, // No desaparece hasta que el usuario la toque
             priority: 2, // Prioridad alta para Android
             data: { url: self.location.origin }
+            actions: [
+                    { action: 'stop', title: 'DETENER ALARMA' }
+                    ]
         };
 
         event.waitUntil(
@@ -36,7 +39,13 @@ self.addEventListener('message', (event) => {
 
 // 3. Qué hacer cuando el usuario toca la notificación
 self.addEventListener('notificationclick', (event) => {
-    event.notification.close();
+    event.notification.close(); // Cierra la notificación
+
+    if (event.action === 'stop') {
+        // Aquí podrías enviar un mensaje de vuelta a la app para parar el audio
+        console.log('El usuario detuvo la alarma desde la notificación');
+    }
+
     event.waitUntil(
         clients.matchAll({ type: 'window' }).then((clientList) => {
             if (clientList.length > 0) return clientList[0].focus();
@@ -98,6 +107,7 @@ self.addEventListener('fetch', event => {
     })
   );
 });
+
 
 
 
