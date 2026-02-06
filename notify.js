@@ -44,90 +44,88 @@ function detenerAudio() {
 }
 
 function notify(titleKey, textKey, module = "pomodoro") {
-    // 1. Traducciones (Sincronizado con languages.js/settings.js)
+    // 1. Traducciones
     const lang = localStorage.getItem('lang') || 'es';
     const translations = window.i18n || {}; 
     let title = (translations[lang] && translations[lang][titleKey]) ? translations[lang][titleKey] : titleKey;
     let text = (translations[lang] && translations[lang][textKey]) ? translations[lang][textKey] : textKey;
 
-    // 2. Lógica de Audio (Soporte archivos locales y subidos)
-// Busca el bloque de Lógica de Audio en notify.js y reemplázalo por este:
-try {
-    const filename = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
-    let source;
-    
-    if (filename === "CUSTOM_FILE") {
-        source = localStorage.getItem(`custom_audio_${module}`);
-    } else {
-        // Usamos ruta relativa directa, es lo más compatible con Service Workers
-        source = `assets/ringtones/${filename}`;
-    }
-
-    if (source) {
-        console.log("🔊 Preparando audio:", source);
+    // 2. Lógica de Audio
+    try {
+        const filename = localStorage.getItem(`ringtone_${module}`) || 'ringtone.mp3';
+        let source;
         
-        globalAudio.pause();
-        globalAudio.src = source;
-        globalAudio.loop = true;
-        globalAudio.volume = 1.0;
-        globalAudio.load(); 
+        if (filename === "CUSTOM_FILE") {
+            source = localStorage.getItem(`custom_audio_${module}`);
+        } else {
+            source = `assets/ringtones/${filename}`;
+        }
 
-        // Delay de 1 segundo para no chocar con el sonido de la notificación del sistema
-        setTimeout(() => {
-            globalAudio.play()
-                .then(() => console.log("✅ ¡REPRODUCCIÓN INICIADA!"))
-                .catch(e => {
-                    console.error("❌ Error de reproducción física:", e);
-                    // Re-intento si fue bloqueado
-                    document.addEventListener('click', () => globalAudio.play(), {once:true});
-                });
-        }, 1000); 
-    }
-} catch (e) { console.error("Error en notify.js:", e); }
+        if (source) {
+            globalAudio.pause();
+            globalAudio.src = source;
+            globalAudio.loop = true;
+            globalAudio.volume = 1.0;
+            globalAudio.load(); 
 
-    // 3. Ventana Interna (Toast Persistente con botón OK)
-  if (typeof M !== 'undefined') {
+            setTimeout(() => {
+                globalAudio.play()
+                    .catch(e => {
+                        console.warn("Audio bloqueado, esperando clic:", e);
+                        document.addEventListener('click', () => globalAudio.play(), {once:true});
+                    });
+            }, 1000); 
+        }
+    } catch (e) { console.error("Error audio:", e); }
+
+    // 3. Ventana Interna (Toast Materialize)
+    if (typeof M !== 'undefined') {
         const btnText = (translations[lang] && translations[lang]['btn_stop']) ? translations[lang]['btn_stop'] : 'OK';
         const toastHTML = `
             <div class="toast-content-wrapper">
-        <div class="toast-text">
-            <b>${title}</b><br>
-            <span>${text}</span>
-        </div>
-        <button class="btn-flat btn-stop-alarm" onclick="detenerAudio()">
-            ${btnText}
-        </button>
-    </div>`;
-        M.toast({ html: toastHTML, displayLength: 150000, classes: 'rounded' });
+                <div class="toast-text">
+                    <b>${title}</b><br>
+                    <span>${text}</span>
+                </div>
+                <button class="btn-flat btn-stop-alarm" onclick="detenerAudio()">
+                    ${btnText}
+                </button>
+            </div>`;
+        M.toast({ html: toastHTML, displayLength: 150000, classes: 'rounded alarm-toast' });
     }
 
-    // 4. Vibración
+    // 4. Vibración (Navegador abierto)
     if (localStorage.getItem('vibration') === 'true' && navigator.vibrate) {
         navigator.vibrate([500, 200, 500]);
     }
 
-    // 5. Notificación de Sistema
-    // notify.js
-
-// Busca la parte final de tu función notify() y reemplázala por esto:
-if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-    // Enviamos el mensaje al Service Worker para que vibre aunque esté bloqueado
-    navigator.serviceWorker.controller.postMessage({
-        type: 'SHOW_NOTIFICATION',
-        title: title, // Usa las variables que ya recibe tu función notify
-        text: text
-    });
-} else if ('serviceWorker' in navigator) {
-    // Fallback por si el controlador no está listo aún
-    navigator.serviceWorker.ready.then(reg => {
-        reg.showNotification(title, {
-            body: text,
-            vibrate: [1000, 500, 1000],
-            requireInteraction: true
+    // 5. NOTIFICACIÓN DE SISTEMA (Service Worker)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => {
+            // Enviamos los datos para que el SW los muestre con botones y vibración
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    type: 'SHOW_NOTIFICATION',
+                    title: title,
+                    text: text
+                });
+            } else {
+                // Si no hay controlador (pasa al refrescar), la lanzamos directamente desde el registro
+                reg.showNotification(title, {
+                    body: text,
+                    icon: 'assets/splash.png',
+                    badge: 'assets/favicon-16x16.png',
+                    vibrate: [1000, 500, 1000],
+                    requireInteraction: true,
+                    tag: 'dailytools-alert',
+                    renotify: true,
+                    actions: [{ action: 'stop', title: 'DETENER ALARMA' }]
+                });
+            }
         });
-    });
+    }
 }
-}
+
 
 
 
