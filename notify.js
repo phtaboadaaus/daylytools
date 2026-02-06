@@ -107,18 +107,28 @@ try {
     }
 
     // 5. Notificación de Sistema
-    if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-        navigator.serviceWorker.ready.then(reg => {
-            reg.showNotification(title, {
-                body: text,
-                icon: 'assets/splash.png',
-                tag: 'dailytools-alert',
-                renotify: true,
-                requireInteraction: true
-            });
+    // notify.js
+
+// Busca la parte final de tu función notify() y reemplázala por esto:
+if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    // Enviamos el mensaje al Service Worker para que vibre aunque esté bloqueado
+    navigator.serviceWorker.controller.postMessage({
+        type: 'SHOW_NOTIFICATION',
+        title: title, // Usa las variables que ya recibe tu función notify
+        text: text
+    });
+} else if ('serviceWorker' in navigator) {
+    // Fallback por si el controlador no está listo aún
+    navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(title, {
+            body: text,
+            vibrate: [1000, 500, 1000],
+            requireInteraction: true
         });
-    }
+    });
 }
+}
+
 
 
 
