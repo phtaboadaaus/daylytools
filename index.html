@@ -437,7 +437,11 @@
   </div>
 <script>
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js', { scope: '/' });
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js', { scope: '/' })
+        .then(reg => console.log('SW registrado con éxito. Scope:', reg.scope))
+        .catch(err => console.error('Fallo al registrar SW:', err));
+    });
   }
 </script>
 
@@ -458,6 +462,7 @@
 </body>
 
 </html>
+
 
 
 
