@@ -42,7 +42,6 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 const ASSETS = [
-  './',
   'index.html',
   'styles.css',
   'manifest.json',
@@ -85,15 +84,30 @@ self.addEventListener('activate', event => {
 
 // Estrategia: Los audios (.mp3) SIEMPRE van por red, el resto por cache
 self.addEventListener('fetch', event => {
-  if (event.request.url.endsWith('.mp3')) {
-    return event.respondWith(fetch(event.request));
+  // Omitir archivos de audio para que no se bloqueen en caché
+  if (event.request.url.indexOf('.mp3') > -1) {
+    return; // Deja que el navegador lo maneje normalmente
   }
+
   event.respondWith(
     caches.match(event.request).then(response => {
-      return response || fetch(event.request);
+      // 1. Si está en caché, lo devolvemos
+      if (response) return response;
+
+      // 2. Si no está, intentamos ir a la red
+      return fetch(event.request).then(fetchRes => {
+        // Si la respuesta es válida, la devolvemos
+        return fetchRes;
+      }).catch(err => {
+        // 3. FALLBACK: Si falla la red (offline) y es una página, mostrar index
+        if (event.request.mode === 'navigate') {
+          return caches.match('index.html');
+        }
+      });
     })
   );
 });
+
 
 
 
